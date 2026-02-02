@@ -4,7 +4,7 @@ Minimalist developer portfolio with void aesthetic, built with React, TypeScript
 
 ## 🚀 Live Demo
 
-[View Portfolio](https://canercoskun.github.io/J-Portfolio/)
+[View Portfolio](https://jedkx.github.io/J-Portfolio/)
 
 ## ⚡ Tech Stack
 
