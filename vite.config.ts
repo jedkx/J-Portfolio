@@ -4,8 +4,8 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // GitHub Pages base path - change to '/repo-name/' if not using username.github.io
-  base: '/',
+  // GitHub Pages base path
+  base: '/J-Portfolio/',
   plugins: [react()],
   resolve: {
     alias: {
