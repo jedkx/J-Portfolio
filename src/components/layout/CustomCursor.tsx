@@ -4,14 +4,18 @@
 
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import { usePrefersReducedMotion } from '@/hooks';
 
 export const CustomCursor: React.FC = () => {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const trailRefs = useRef<Array<{ x: number; y: number; scale: number }>>([]);
   const trailElements = useRef<HTMLDivElement[]>([]);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+
     const dot = dotRef.current;
     const ring = ringRef.current;
 
@@ -25,6 +29,7 @@ export const CustomCursor: React.FC = () => {
 
     // Initialize trail points
     const trailCount = 8;
+    trailRefs.current = [];
     for (let i = 0; i < trailCount; i++) {
       trailRefs.current.push({ x: 0, y: 0, scale: 1 - i * 0.12 });
     }
@@ -164,7 +169,11 @@ export const CustomCursor: React.FC = () => {
         el.removeEventListener('mouseleave', onMouseLeaveHoverable);
       });
     };
-  }, []);
+  }, [prefersReducedMotion]);
+
+  if (prefersReducedMotion) {
+    return null;
+  }
 
   return (
     <>

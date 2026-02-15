@@ -41,7 +41,7 @@ export const useFadeIn = <T extends HTMLElement>(
     const element = ref.current;
     const { start = 'top 85%', toggleActions = 'play none none reverse' } = options;
 
-    gsap.fromTo(
+    const tween = gsap.fromTo(
       element,
       {
         opacity: 0,
@@ -61,7 +61,8 @@ export const useFadeIn = <T extends HTMLElement>(
     );
 
     return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      tween.scrollTrigger?.kill();
+      tween.kill();
     };
   }, [options]);
 
@@ -80,7 +81,7 @@ export const useStaggerFadeIn = <T extends HTMLElement>(
     const elements = ref.current.querySelectorAll(selector);
     const { start = 'top 85%', toggleActions = 'play none none reverse' } = options;
 
-    gsap.fromTo(
+    const tween = gsap.fromTo(
       elements,
       {
         opacity: 0,
@@ -101,7 +102,8 @@ export const useStaggerFadeIn = <T extends HTMLElement>(
     );
 
     return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      tween.scrollTrigger?.kill();
+      tween.kill();
     };
   }, [selector, options]);
 
@@ -116,7 +118,7 @@ export const useParallax = <T extends HTMLElement>(
   useEffect(() => {
     if (!ref.current) return;
 
-    gsap.to(ref.current, {
+    const tween = gsap.to(ref.current, {
       yPercent: speed * 100,
       ease: 'none',
       scrollTrigger: {
@@ -128,7 +130,8 @@ export const useParallax = <T extends HTMLElement>(
     });
 
     return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      tween.scrollTrigger?.kill();
+      tween.kill();
     };
   }, [speed]);
 

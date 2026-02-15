@@ -17,23 +17,30 @@ export const Navigation: React.FC = () => {
 
   // Update active section based on scroll position
   useEffect(() => {
-    const handleScroll = () => {
-      const sections = NAV_ITEMS.map((item) => item.href.replace('#', ''));
+    const sections = NAV_ITEMS.map((item) => item.href.replace('#', ''));
+    const elements = sections
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
 
-      for (const section of sections.reverse()) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 150) {
-            setActiveSection(section);
-            break;
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
           }
-        }
+        });
+      },
+      {
+        rootMargin: '-30% 0px -60% 0px',
+        threshold: 0.1,
       }
-    };
+    );
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
   }, []);
 
   const handleNavClick = (href: string) => {
@@ -52,7 +59,7 @@ export const Navigation: React.FC = () => {
         } ${isHidden ? '-translate-y-full' : ''}`}
       >
         <div className="container mx-auto px-4 md:px-8">
-          <nav className="flex items-center h-20">
+          <nav className="flex items-center h-20" aria-label="Primary">
             {/* Logo */}
             <a
               href="#hero"
@@ -77,6 +84,7 @@ export const Navigation: React.FC = () => {
                         e.preventDefault();
                         handleNavClick(item.href);
                       }}
+                      aria-current={isActive ? 'page' : undefined}
                       className={`font-mono text-xs tracking-widest uppercase transition-colors hoverable ${
                         isActive ? 'text-alert' : 'text-terminal-muted hover:text-alert'
                       }`}
@@ -101,6 +109,8 @@ export const Navigation: React.FC = () => {
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden p-2 text-terminal-muted hover:text-terminal transition-colors hoverable ml-auto"
               aria-label="Toggle menu"
+              aria-expanded={isOpen}
+              aria-controls="mobile-menu"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -113,11 +123,13 @@ export const Navigation: React.FC = () => {
 
       {/* Mobile Menu */}
       <div
+        id="mobile-menu"
         className={`fixed inset-0 z-40 bg-black backdrop-blur-md transition-all duration-500 md:hidden ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
+        aria-hidden={!isOpen}
       >
-        <nav className="flex flex-col items-center justify-center h-full gap-8">
+        <nav className="flex flex-col items-center justify-center h-full gap-8" aria-label="Mobile">
           {NAV_ITEMS.map((item, index) => {
             const isActive = activeSection === item.href.replace('#', '');
             return (
@@ -128,6 +140,7 @@ export const Navigation: React.FC = () => {
                   e.preventDefault();
                   handleNavClick(item.href);
                 }}
+                aria-current={isActive ? 'page' : undefined}
                 className={`font-mono text-2xl tracking-widest transition-all duration-300 ${
                   isActive ? 'text-terminal' : 'text-terminal-muted'
                 } ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}

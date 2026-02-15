@@ -3,6 +3,7 @@
 // ============================================
 
 import React, { useRef, useEffect, useState } from 'react';
+import { usePrefersReducedMotion } from '@/hooks';
 
 interface MotionTrackerProps {
   forceAlert?: boolean;
@@ -13,9 +14,12 @@ export const MotionTracker: React.FC<MotionTrackerProps> = ({ forceAlert = false
   const [isPressed, setIsPressed] = useState(false);
   const [blipPosition, setBlipPosition] = useState({ x: 0, y: 0, angle: 0 });
   const [radarRotation, setRadarRotation] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Radar rotation animation (4 seconds per rotation)
   useEffect(() => {
+    if (prefersReducedMotion) return;
+
     let animationId: number;
     const startTime = Date.now();
 
@@ -28,10 +32,12 @@ export const MotionTracker: React.FC<MotionTrackerProps> = ({ forceAlert = false
 
     animate();
     return () => cancelAnimationFrame(animationId);
-  }, []);
+  }, [prefersReducedMotion]);
 
   // Mouse tracking - map footer area to radar
   useEffect(() => {
+    if (prefersReducedMotion) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
 
@@ -89,7 +95,7 @@ export const MotionTracker: React.FC<MotionTrackerProps> = ({ forceAlert = false
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   // Check if radar line is near the blip (with proper angle normalization)
   const normalizeAngle = (angle: number) => {

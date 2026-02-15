@@ -113,12 +113,13 @@ export const FooterSection: React.FC = () => {
 
           <button
             onClick={scrollToTop}
-            className="group flex items-center gap-3 font-mono text-xs text-terminal-muted hover:text-terminal transition-colors hoverable magnetic"
+            className="group inline-flex items-center gap-2 font-mono text-xs text-terminal-muted hover:text-terminal transition-colors hoverable magnetic px-3 py-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-alert"
+            style={{ width: 'auto', minWidth: 0 }}
             onMouseEnter={() => setIsLinkHovered(true)}
             onMouseLeave={() => setIsLinkHovered(false)}
           >
-            <span>BACK TO TOP</span>
-            <span className="w-4 h-4 border border-terminal/30 flex items-center justify-center group-hover:border-terminal transition-colors">
+            <span className="pointer-events-none">BACK TO TOP</span>
+            <span className="w-4 h-4 border border-terminal/30 flex items-center justify-center group-hover:border-terminal transition-colors pointer-events-none">
               ↑
             </span>
           </button>

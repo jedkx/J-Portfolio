@@ -23,6 +23,22 @@ export const useMediaQuery = (query: string): boolean => {
   return matches;
 };
 
+export const usePrefersReducedMotion = (): boolean => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleChange = () => setPrefersReducedMotion(media.matches);
+
+    handleChange();
+    media.addEventListener('change', handleChange);
+
+    return () => media.removeEventListener('change', handleChange);
+  }, []);
+
+  return prefersReducedMotion;
+};
+
 export const useBreakpoint = () => {
   const isSm = useMediaQuery(`(min-width: ${BREAKPOINTS.sm}px)`);
   const isMd = useMediaQuery(`(min-width: ${BREAKPOINTS.md}px)`);

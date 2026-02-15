@@ -19,18 +19,37 @@ import { AtmosphereOverlays } from '@/components/layout/AtmosphereOverlays';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
 import { initMagneticEffect } from '@/utils/magneticEffect';
 import { initTextReveal } from '@/utils/textReveal';
+import { usePrefersReducedMotion } from '@/hooks';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [enableCustomCursor, setEnableCustomCursor] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
-    // Disable default cursor on desktop
-    if (window.innerWidth >= 1024) {
-      document.body.style.cursor = 'none';
-    }
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    const pointerQuery = window.matchMedia('(pointer: fine)');
+
+    const updateCursorState = () => {
+      const shouldEnableCursor =
+        desktopQuery.matches && pointerQuery.matches && !prefersReducedMotion;
+
+      setEnableCustomCursor(shouldEnableCursor);
+
+      if (shouldEnableCursor) {
+        document.body.classList.add('cursor-hidden');
+      } else {
+        document.body.classList.remove('cursor-hidden');
+      }
+    };
+
+    updateCursorState();
+    desktopQuery.addEventListener('change', updateCursorState);
+    pointerQuery.addEventListener('change', updateCursorState);
+
 
     // Smooth scroll behavior with performance optimizations
     ScrollTrigger.defaults({
@@ -43,7 +62,7 @@ const App: React.FC = () => {
     });
 
     // Initialize magnetic effect after content loads
-    if (!isLoading) {
+    if (!isLoading && !prefersReducedMotion) {
       setTimeout(() => {
         initMagneticEffect();
         initTextReveal();
@@ -51,9 +70,11 @@ const App: React.FC = () => {
     }
 
     return () => {
-      document.body.style.cursor = 'auto';
+      desktopQuery.removeEventListener('change', updateCursorState);
+      pointerQuery.removeEventListener('change', updateCursorState);
+      document.body.classList.remove('cursor-hidden');
     };
-  }, [isLoading]);
+  }, [isLoading, prefersReducedMotion]);
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
@@ -61,11 +82,15 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-void min-h-screen">
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
+
       {/* Loading Screen */}
       {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
 
       {/* Custom Cursor */}
-      <CustomCursor />
+      {enableCustomCursor && <CustomCursor />}
 
       {/* Atmosphere Overlays */}
       <AtmosphereOverlays />
@@ -76,7 +101,7 @@ const App: React.FC = () => {
         <Navigation />
 
         {/* Main Sections */}
-        <main>
+        <main id="main-content">
           <HeroSection />
           <AboutSection />
           <ProjectsSection />

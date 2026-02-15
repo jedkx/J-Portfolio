@@ -94,90 +94,93 @@ export const ProjectsSection: React.FC = () => {
 
       {/* Desktop - Horizontal Scroll Container */}
       <div
-        ref={scrollContainerRef}
-        className="hidden md:flex items-center gap-8 px-8 h-screen"
-        style={{ width: 'max-content', willChange: 'transform', transform: 'translateZ(0)' }}
-      >
-        {/* Spacer for header visibility */}
-        <div className="w-[30vw] flex-shrink-0" />
+        {/* Desktop - Horizontal Scroll Container */}
+        <div
+          ref={scrollContainerRef}
+          className="hidden md:flex items-center gap-8 px-8 h-screen"
+          style={{ width: 'max-content', willChange: 'transform', transform: 'translateZ(0)' }}
+        >
+          {/* Spacer for header visibility */}
+          <div className="w-[30vw] flex-shrink-0" />
 
-        {/* Project Cards */}
-        {PROJECTS.map((project, index) => (
-          <article
-            key={project.id}
-            className="project-card-file group flex-shrink-0 w-[60vw] md:w-[45vw] lg:w-[35vw] h-[55vh] relative hoverable"
-            style={{ willChange: 'transform', transform: 'translateZ(0)' }}
-          >
-            {/* File Label */}
-            <div className="absolute -top-5 left-0 flex items-center gap-4">
-              <span className="font-mono text-[10px] text-terminal-dark tracking-widest">
-                FILE_{String(index + 1).padStart(2, '0')}
-              </span>
-              <span className="font-mono text-[10px] text-alert">{project.category}</span>
-            </div>
-
-            {/* Card Content */}
-            <div className="relative h-full border border-terminal/20 overflow-hidden group-hover:border-terminal/40 transition-colors duration-500">
-              {/* Image */}
-              <div className="absolute inset-0">
-                <img
-                  src={project.imageUrl}
-                  alt={project.title}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                  loading="lazy"
-                  style={{ willChange: 'transform', transform: 'translateZ(0)' }}
-                />
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-void/70 group-hover:bg-void/50 transition-colors duration-500" />
+          {/* Project Cards */}
+          {PROJECTS.map((project, index) => (
+            <article
+              key={project.id}
+              className="project-card-file group flex-shrink-0 w-[60vw] md:w-[45vw] lg:w-[35vw] h-[55vh] relative hoverable"
+              style={{ willChange: 'transform', transform: 'translateZ(0)' }}
+            >
+              {/* File Label */}
+              <div className="absolute -top-5 left-0 flex items-center gap-4">
+                <span className="font-mono text-[10px] text-terminal-dark tracking-widest">
+                  FILE_{String(index + 1).padStart(2, '0')}
+                </span>
+                <span className="font-mono text-[10px] text-alert">{project.category}</span>
               </div>
 
-              {/* Content */}
-              <div className="relative h-full flex flex-col justify-end p-6">
-                {/* Title */}
-                <h3 className="text-2xl md:text-3xl font-display font-bold text-terminal mb-3">
-                  {project.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-terminal-muted text-xs mb-4 max-w-md">
-                  {project.description}
-                </p>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {project.tags.slice(0, 4).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 text-[10px] font-mono text-terminal-dark border border-terminal/20"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+              {/* Card Content */}
+              <div className="relative h-full border border-terminal/20 overflow-hidden group-hover:border-terminal/40 transition-colors duration-500">
+                {/* Image */}
+                <div className="absolute inset-0">
+                  <img
+                    src={project.imageUrl}
+                    alt={project.title}
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    loading="lazy"
+                    decoding="async"
+                    width={1200}
+                    height={800}
+                    style={{ willChange: 'transform', transform: 'translateZ(0)' }}
+                  />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-void/70 group-hover:bg-void/50 transition-colors duration-500" />
                 </div>
 
-                {/* Links */}
-                <div className="flex gap-4">
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-xs font-mono text-terminal hover:text-alert transition-colors"
-                  >
-                    <ExternalLink size={14} />
-                    VIEW PROJECT
-                  </a>
-                  {project.github && (
+                {/* Content */}
+                <div className="relative h-full flex flex-col justify-end p-6">
+                  {/* Title */}
+                  <h3 className="text-2xl md:text-3xl font-display font-bold text-terminal mb-3">
+                    {project.title}
+                  </h3>
+                  <p className="text-terminal-muted text-base mb-4">
+                    {project.description}
+                  </p>
+                  <div className="flex gap-4">
                     <a
-                      href={project.github}
+                      href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 text-xs font-mono text-terminal hover:text-alert transition-colors"
                     >
-                      <Github size={14} />
-                      SOURCE
+                      <ExternalLink size={14} />
+                      VIEW PROJECT
                     </a>
-                  )}
+                    {project.github && (
+                      <a
+                        href={project.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-xs font-mono text-terminal hover:text-alert transition-colors"
+                      >
+                        <Github size={14} />
+                        SOURCE
+                      </a>
+                    )}
+                  </div>
                 </div>
+
+                {/* Corner marks */}
+                <div className="absolute top-3 left-3 w-5 h-5 border-l-2 border-t-2 border-terminal/20" />
+                <div className="absolute top-3 right-3 w-5 h-5 border-r-2 border-t-2 border-terminal/20" />
+                <div className="absolute bottom-3 left-3 w-5 h-5 border-l-2 border-b-2 border-terminal/20" />
+                <div className="absolute bottom-3 right-3 w-5 h-5 border-r-2 border-b-2 border-terminal/20" />
+              </div>
+            </article>
+          ))}
+
+          {/* End spacer */}
+          <div className="w-[20vw] flex-shrink-0" />
+        </div>
               </div>
 
               {/* Corner marks */}
@@ -194,62 +197,70 @@ export const ProjectsSection: React.FC = () => {
       </div>
 
       {/* Mobile - Simple Vertical List */}
-      <div className="md:hidden">
+      {/* Mobile - Modern Scrollable Card List */}
+      <div className="md:hidden pb-6 px-2">
         {PROJECTS.map((project, index) => (
           <div
             key={project.id}
-            className="mx-4 mb-4 border border-terminal/20 bg-void"
+            className="rounded-xl bg-void border border-terminal/30 shadow-lg overflow-hidden relative flex flex-col w-full max-w-xs mx-auto mb-6"
           >
-            {/* Image */}
-            <div className="relative h-32 overflow-hidden">
-              <img
-                src={project.imageUrl}
-                alt={project.title}
-                className="w-full h-full object-cover grayscale opacity-40"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-void via-void/50 to-transparent" />
-              <div className="absolute top-2 left-2 flex items-center gap-2">
-                <span className="font-mono text-[9px] text-terminal-dark bg-void/80 px-2 py-1">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <span className="font-mono text-[9px] text-alert bg-void/80 px-2 py-1">
-                  {project.category}
-                </span>
+            {/* Image & Overlay */}
+            <div className="relative h-64 md:h-36">
+                <img
+                  src={project.imageUrl}
+                  alt={project.title}
+                  className="w-full h-full object-cover grayscale opacity-50"
+                  loading="lazy"
+                  decoding="async"
+                  width={800}
+                  height={480}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-void via-void/60 to-transparent" />
+                <div className="absolute top-2 left-2 flex items-center gap-2">
+                  <span className="font-mono text-[10px] text-terminal-dark bg-void/80 px-2 py-1 rounded">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className="font-mono text-[10px] text-alert bg-void/80 px-2 py-1 rounded">
+                    {project.category}
+                  </span>
+                </div>
               </div>
-            </div>
-            
-            {/* Content */}
-            <div className="p-4">
-              <h3 className="text-base font-display font-bold text-terminal mb-1">
-                {project.title}
-              </h3>
-              <p className="text-terminal-muted text-[11px] mb-3">
-                {project.description}
-              </p>
-              <div className="flex gap-4">
-                <a
-                  href={project.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] font-mono text-terminal flex items-center gap-1"
-                >
-                  <ExternalLink size={10} /> VIEW
-                </a>
-                {project.github && (
+              {/* Content */}
+              <div className="flex-1 flex flex-col p-4 min-h-[180px] md:min-h-0">
+                <h3 className="text-lg font-display font-bold text-terminal mb-1 truncate">
+                  {project.title}
+                </h3>
+                <p className="text-terminal-muted text-xs mb-3 line-clamp-3">
+                  {project.description}
+                </p>
+                <div className="flex gap-4 mt-auto">
                   <a
-                    href={project.github}
+                    href={project.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[10px] font-mono text-terminal flex items-center gap-1"
+                    className="text-[11px] font-mono text-terminal flex items-center gap-1 hover:text-alert transition-colors"
                   >
-                    <Github size={10} /> CODE
+                    <ExternalLink size={11} /> VIEW
                   </a>
-                )}
+                  {project.github && (
+                    <a
+                      href={project.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono text-terminal flex items-center gap-1 hover:text-alert transition-colors"
+                    >
+                      <Github size={11} /> CODE
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        {/* Scroll hint */}
+        <div className="flex justify-center mt-2">
+          <span className="text-terminal-dark text-xs font-mono animate-pulse">⇆ Kaydır</span>
+        </div>
       </div>
 
       {/* Desktop Scroll hint */}

@@ -6,6 +6,9 @@
 import gsap from 'gsap';
 
 export const initMagneticEffect = () => {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return;
+
   const magneticElements = document.querySelectorAll('.magnetic');
 
   magneticElements.forEach((element) => {

@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { usePrefersReducedMotion } from '@/hooks';
 
 interface TypewriterProps {
   texts: string[];
@@ -28,15 +29,22 @@ export const Typewriter: React.FC<TypewriterProps> = ({
   const [textIndex, setTextIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
   const [showCursor, setShowCursor] = useState(true);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Cursor blink effect
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setDisplayText(texts[0] ?? '');
+      setShowCursor(false);
+      return;
+    }
+
     const cursorInterval = setInterval(() => {
       setShowCursor((prev) => !prev);
     }, 530);
 
     return () => clearInterval(cursorInterval);
-  }, []);
+  }, [prefersReducedMotion, texts]);
 
   const handleTyping = useCallback(() => {
     const currentText = texts[textIndex];
@@ -64,11 +72,13 @@ export const Typewriter: React.FC<TypewriterProps> = ({
   }, [displayText, isTyping, textIndex, texts, pauseTime, loop]);
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+
     const typingSpeed = isTyping ? speed : speed / 2;
     const timeout = setTimeout(handleTyping, typingSpeed);
 
     return () => clearTimeout(timeout);
-  }, [handleTyping, isTyping, speed]);
+  }, [handleTyping, isTyping, speed, prefersReducedMotion]);
 
   return (
     <span className={cn('inline-flex items-center font-mono', className)}>

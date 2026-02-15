@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { usePrefersReducedMotion } from '@/hooks';
 
 interface LoadingScreenProps {
   onComplete: () => void;
@@ -21,8 +22,16 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentLine, setCurrentLine] = useState(0);
   const [progress, setProgress] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setCurrentLine(BOOT_LINES.length);
+      setProgress(100);
+      const timeout = setTimeout(onComplete, 200);
+      return () => clearTimeout(timeout);
+    }
+
     const tl = gsap.timeline();
 
     // Show boot lines one by one (slower)
@@ -59,7 +68,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
     return () => {
       tl.kill();
     };
-  }, [onComplete]);
+  }, [onComplete, prefersReducedMotion]);
 
   return (
     <div

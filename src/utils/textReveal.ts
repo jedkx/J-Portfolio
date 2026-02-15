@@ -6,8 +6,14 @@
 import gsap from 'gsap';
 
 export const initTextReveal = () => {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return;
+
   // Split text into characters
   const splitText = (element: HTMLElement) => {
+    if (element.dataset.revealProcessed === 'true') return;
+    element.dataset.revealProcessed = 'true';
+
     const text = element.textContent || '';
     element.innerHTML = '';
     

@@ -7,15 +7,23 @@ import gsap from 'gsap';
 import { ParticleBackground } from '@/components/layout/ParticleBackground';
 import { Typewriter } from '@/components/ui/Typewriter';
 import { TYPEWRITER_TEXTS, PERSONAL_INFO } from '@/constants/data';
+import { usePrefersReducedMotion } from '@/hooks';
 
 export const HeroSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const frameRef = useRef<number | null>(null);
+  const lastCoordinateUpdateRef = useRef(0);
   const [coordinates, setCoordinates] = React.useState({ lat: 39.9334, lon: 32.8597 });
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     // Simple entrance animation
+    if (prefersReducedMotion) return;
+
     const tl = gsap.timeline({ delay: 0.3 });
 
     tl.fromTo(
@@ -39,39 +47,49 @@ export const HeroSection: React.FC = () => {
     return () => {
       tl.kill();
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   // Mouse glow effect with throttling
   useEffect(() => {
-    let ticking = false;
+    if (prefersReducedMotion) return;
+
+    const updateCoordinates = (x: number, y: number) => {
+      const now = performance.now();
+      if (now - lastCoordinateUpdateRef.current < 80) return;
+      lastCoordinateUpdateRef.current = now;
+
+      const lat = 39.9334 + (y / window.innerHeight - 0.5) * 20;
+      const lon = 32.8597 + (x / window.innerWidth - 0.5) * 30;
+
+      setCoordinates({
+        lat: Number(lat.toFixed(4)),
+        lon: Number(lon.toFixed(4)),
+      });
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const glow = document.querySelector('.hero-glow') as HTMLElement;
-          if (glow) {
-            glow.style.left = `${e.clientX}px`;
-            glow.style.top = `${e.clientY}px`;
-          }
+      mouseRef.current = { x: e.clientX, y: e.clientY };
 
-          // Update coordinates based on mouse position
-          const lat = 39.9334 + ((e.clientY / window.innerHeight) - 0.5) * 20;
-          const lon = 32.8597 + ((e.clientX / window.innerWidth) - 0.5) * 30;
-          
-          setCoordinates({
-            lat: Number(lat.toFixed(4)),
-            lon: Number(lon.toFixed(4))
-          });
-          
-          ticking = false;
-        });
-        ticking = true;
-      }
+      if (frameRef.current !== null) return;
+      frameRef.current = window.requestAnimationFrame(() => {
+        frameRef.current = null;
+        const { x, y } = mouseRef.current;
+        if (glowRef.current) {
+          glowRef.current.style.left = `${x}px`;
+          glowRef.current.style.top = `${y}px`;
+        }
+        updateCoordinates(x, y);
+      });
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, [prefersReducedMotion]);
 
   return (
     <section
@@ -83,7 +101,7 @@ export const HeroSection: React.FC = () => {
       <ParticleBackground />
 
       {/* Hero Glow - follows mouse */}
-      <div className="hero-glow" />
+      <div ref={glowRef} className="hero-glow" />
 
       {/* Space void gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(20,20,30,0.3)_0%,transparent_70%)]" />

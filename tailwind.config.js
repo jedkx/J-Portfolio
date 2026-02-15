@@ -13,9 +13,9 @@ export default {
           light: '#080808',
         },
         terminal: {
-          DEFAULT: '#cccccc',
-          muted: '#888888',
-          dark: '#666666',
+          DEFAULT: '#f5f5f5', // daha açık
+          muted: '#ededed',   // daha açık
+          dark: '#bdbdbd',
         },
         alert: {
           DEFAULT: '#ff3333',
@@ -23,14 +23,14 @@ export default {
         },
         // Legacy colors for compatibility
         primary: '#ffffff',
-        secondary: '#666666',
+        secondary: '#ededed', // daha açık
         accent: '#ff3333',
         background: '#020202',
         surface: '#080808',
         'surface-light': '#111111',
-        text: '#cccccc',
-        'text-muted': '#888888',
-        border: 'rgba(255,255,255,0.1)',
+        text: '#f5f5f5', // daha açık
+        'text-muted': '#ededed', // daha açık
+        border: 'rgba(255,255,255,0.15)',
         success: '#00ff88',
         warning: '#ffaa00',
         error: '#ff3333',
