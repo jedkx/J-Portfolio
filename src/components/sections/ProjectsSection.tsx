@@ -94,12 +94,10 @@ export const ProjectsSection: React.FC = () => {
 
       {/* Desktop - Horizontal Scroll Container */}
       <div
-        {/* Desktop - Horizontal Scroll Container */}
-        <div
-          ref={scrollContainerRef}
-          className="hidden md:flex items-center gap-8 px-8 h-screen"
-          style={{ width: 'max-content', willChange: 'transform', transform: 'translateZ(0)' }}
-        >
+        ref={scrollContainerRef}
+        className="hidden md:flex items-center gap-8 px-8 h-screen"
+        style={{ width: 'max-content', willChange: 'transform', transform: 'translateZ(0)' }}
+      >
           {/* Spacer for header visibility */}
           <div className="w-[30vw] flex-shrink-0" />
 
@@ -181,20 +179,7 @@ export const ProjectsSection: React.FC = () => {
           {/* End spacer */}
           <div className="w-[20vw] flex-shrink-0" />
         </div>
-              </div>
 
-              {/* Corner marks */}
-              <div className="absolute top-3 left-3 w-5 h-5 border-l-2 border-t-2 border-terminal/20" />
-              <div className="absolute top-3 right-3 w-5 h-5 border-r-2 border-t-2 border-terminal/20" />
-              <div className="absolute bottom-3 left-3 w-5 h-5 border-l-2 border-b-2 border-terminal/20" />
-              <div className="absolute bottom-3 right-3 w-5 h-5 border-r-2 border-b-2 border-terminal/20" />
-            </div>
-          </article>
-        ))}
-
-        {/* End spacer */}
-        <div className="w-[20vw] flex-shrink-0" />
-      </div>
 
       {/* Mobile - Simple Vertical List */}
       {/* Mobile - Modern Scrollable Card List */}
@@ -261,7 +246,6 @@ export const ProjectsSection: React.FC = () => {
         <div className="flex justify-center mt-2">
           <span className="text-terminal-dark text-xs font-mono animate-pulse">⇆ Kaydır</span>
         </div>
-      </div>
 
       {/* Desktop Scroll hint */}
       <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
