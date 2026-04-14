@@ -3,7 +3,12 @@ import type { Project } from '@/types';
 function getProjectIdentity(project: Project): string {
   const githubRef = (project.github || project.link).toLowerCase().trim();
   if (githubRef.includes('github.com/')) {
-    return githubRef.replace(/\/+$/, '');
+    let normalizedRef = githubRef;
+    while (normalizedRef.endsWith('/')) {
+      normalizedRef = normalizedRef.slice(0, -1);
+    }
+
+    return normalizedRef;
   }
 
   return project.title.toLowerCase().trim();
