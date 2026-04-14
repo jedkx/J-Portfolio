@@ -4,11 +4,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-COPY --chown=node:node index.html ./
-COPY --chown=node:node tsconfig.json tsconfig.node.json ./
-COPY --chown=node:node postcss.config.js tailwind.config.js vite.config.ts ./
-COPY --chown=node:node src ./src
-COPY --chown=node:node public ./public
+COPY index.html ./
+COPY tsconfig.json tsconfig.node.json ./
+COPY postcss.config.js tailwind.config.js vite.config.ts ./
+COPY src ./src
+COPY public ./public
+
+# Keep copied source files read-only for non-root runtime user.
+RUN chmod -R a-w /app/src /app/public /app/index.html /app/tsconfig.json /app/tsconfig.node.json /app/postcss.config.js /app/tailwind.config.js /app/vite.config.ts
 
 USER node
 
