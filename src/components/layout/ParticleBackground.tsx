@@ -5,6 +5,7 @@
 // ============================================
 
 import React, { useEffect, useRef } from 'react';
+import { secureRandomCentered, secureRandomRange } from '@/lib/random';
 
 interface Particle {
   x: number;
@@ -58,15 +59,15 @@ export const ParticleBackground: React.FC = () => {
 
     // Create a new star
     const birthStar = (x?: number, y?: number): Particle => {
-      const maxLife = Math.random() * 5000 + 3000;
+      const maxLife = secureRandomRange(3000, 8000);
       return {
-        x: x ?? Math.random() * canvas.width,
-        y: y ?? Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        size: Math.random() * 2 + 0.5,
+        x: x ?? secureRandomRange(0, canvas.width),
+        y: y ?? secureRandomRange(0, canvas.height),
+        vx: secureRandomCentered(0.5),
+        vy: secureRandomCentered(0.5),
+        size: secureRandomRange(0.5, 2.5),
         opacity: 0,
-        maxOpacity: Math.random() * 0.7 + 0.3,
+        maxOpacity: secureRandomRange(0.3, 1),
         life: 0,
         maxLife,
         dying: false,
@@ -77,7 +78,7 @@ export const ParticleBackground: React.FC = () => {
     const initParticles = () => {
       particlesRef.current = Array.from({ length: MAX_PARTICLES }, () => {
         const p = birthStar();
-        p.life = Math.random() * p.maxLife;
+        p.life = secureRandomRange(0, p.maxLife);
         p.opacity = p.maxOpacity * Math.min(1, p.life / 50);
         return p;
       });
@@ -230,8 +231,8 @@ export const ParticleBackground: React.FC = () => {
 
           // Trembling effect
           const trembleStrength = chargeLevel * 1.5;
-          particle.vx += (Math.random() - 0.5) * trembleStrength;
-          particle.vy += (Math.random() - 0.5) * trembleStrength;
+          particle.vx += secureRandomCentered(trembleStrength);
+          particle.vy += secureRandomCentered(trembleStrength);
 
           // Brighten when pulled
           particle.opacity = Math.min(1, particle.maxOpacity + (1 - distance / 400) * (0.3 + chargeLevel * 0.3));
@@ -265,8 +266,8 @@ export const ParticleBackground: React.FC = () => {
         particle.vy *= 0.98;
 
         // Gentle random drift
-        particle.vx += (Math.random() - 0.5) * 0.02;
-        particle.vy += (Math.random() - 0.5) * 0.02;
+        particle.vx += secureRandomCentered(0.02);
+        particle.vy += secureRandomCentered(0.02);
 
         // Wrap around edges
         if (particle.x < -20) particle.x = canvas.width + 20;
