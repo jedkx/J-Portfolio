@@ -18,6 +18,10 @@ The key design intent is simple:
 
 [View Portfolio](https://jedkx.github.io/J-Portfolio/)
 
+## Current Screenshot
+
+![J-Portfolio current page screenshot](./public/portfolio.png)
+
 ## Tech Stack
 
 - React 19
