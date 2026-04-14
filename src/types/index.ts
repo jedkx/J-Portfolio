@@ -11,6 +11,29 @@ export interface Project {
   tags: string[];
   link: string;
   github?: string;
+  source?: 'static' | 'github';
+  updatedAt?: string;
+}
+
+export interface GitHubRepo {
+  id: number;
+  name: string;
+  full_name: string;
+  owner: {
+    login: string;
+  };
+  description: string | null;
+  html_url: string;
+  homepage: string | null;
+  language: string | null;
+  topics: string[];
+  stargazers_count: number;
+  forks_count: number;
+  archived: boolean;
+  fork: boolean;
+  private: boolean;
+  default_branch: string;
+  pushed_at: string;
 }
 
 export interface Skill {

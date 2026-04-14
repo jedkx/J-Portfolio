@@ -6,13 +6,14 @@ import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExternalLink, Github } from 'lucide-react';
-import { PROJECTS } from '@/constants/data';
+import { useProjects } from '@/hooks';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export const ProjectsSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { projects, isLoading } = useProjects();
 
   useEffect(() => {
     // Skip all GSAP animations on mobile
@@ -63,7 +64,7 @@ export const ProjectsSection: React.FC = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [projects.length]);
 
   return (
     <section ref={sectionRef} id="projects" className="relative bg-void scroll-mt-16 md:min-h-screen md:overflow-hidden md:snap-start md:snap-always">
@@ -85,7 +86,7 @@ export const ProjectsSection: React.FC = () => {
       {/* Counter */}
       <div className="absolute top-8 right-4 md:right-8 z-10 text-right">
         <div className="font-mono text-2xl md:text-3xl text-terminal font-bold">
-          {String(PROJECTS.length).padStart(2, '0')}
+          {String(projects.length).padStart(2, '0')}
         </div>
         <span className="font-mono text-[10px] text-terminal-dark tracking-[0.2em]">
           PROJECTS
@@ -102,7 +103,7 @@ export const ProjectsSection: React.FC = () => {
           <div className="w-[30vw] flex-shrink-0" />
 
           {/* Project Cards */}
-          {PROJECTS.map((project, index) => (
+          {projects.map((project, index) => (
             <article
               key={project.id}
               className="project-card-file group flex-shrink-0 w-[60vw] md:w-[45vw] lg:w-[35vw] h-[55vh] relative hoverable"
@@ -184,7 +185,7 @@ export const ProjectsSection: React.FC = () => {
       {/* Mobile - Simple Vertical List */}
       {/* Mobile - Modern Scrollable Card List */}
       <div className="md:hidden pb-6 px-2">
-        {PROJECTS.map((project, index) => (
+        {projects.map((project, index) => (
           <div
             key={project.id}
             className="rounded-xl bg-void border border-terminal/30 shadow-lg overflow-hidden relative flex flex-col w-full max-w-xs mx-auto mb-6"
@@ -244,7 +245,9 @@ export const ProjectsSection: React.FC = () => {
         </div>
         {/* Scroll hint */}
         <div className="flex justify-center mt-2">
-          <span className="text-terminal-dark text-xs font-mono animate-pulse">⇆ Kaydır</span>
+          <span className="text-terminal-dark text-xs font-mono animate-pulse">
+            {isLoading ? 'SYNCING GITHUB...' : '⇆ Kaydır'}
+          </span>
         </div>
 
       {/* Desktop Scroll hint */}
