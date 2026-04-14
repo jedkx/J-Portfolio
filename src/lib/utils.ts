@@ -4,6 +4,7 @@
 
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { generateSecureId, secureRandomRange } from '@/lib/random';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -40,7 +41,7 @@ export function mapRange(
 }
 
 export function randomRange(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
+  return secureRandomRange(min, max);
 }
 
 export function debounce<T extends (...args: unknown[]) => unknown>(
@@ -71,7 +72,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
 }
 
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 9);
+  return generateSecureId(7);
 }
 
 export function copyToClipboard(text: string): Promise<void> {

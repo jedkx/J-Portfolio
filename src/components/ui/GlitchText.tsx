@@ -5,6 +5,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { cn } from '@/lib/utils';
+import { secureChance } from '@/lib/random';
 
 interface GlitchTextProps {
   text: string;
@@ -63,7 +64,7 @@ export const GlitchText: React.FC<GlitchTextProps> = ({
 
     // Random glitch effect
     const interval = setInterval(() => {
-      if (Math.random() > 0.95) {
+      if (secureChance(0.05)) {
         triggerGlitch();
       }
     }, 100);
