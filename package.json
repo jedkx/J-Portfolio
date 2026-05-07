@@ -27,8 +27,6 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
-    "@types/pdf-parse": "^1.1.4",
-    "pdf-parse": "^1.1.1",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
