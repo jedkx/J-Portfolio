@@ -5,7 +5,7 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ExternalLink, Github } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { useProjects } from '@/hooks';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -104,8 +104,11 @@ export const ProjectsSection: React.FC = () => {
 
           {/* Project Cards */}
           {projects.map((project, index) => (
-            <article
+            <a
               key={project.id}
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
               className="project-card-file group flex-shrink-0 w-[60vw] md:w-[45vw] lg:w-[35vw] h-[55vh] relative hoverable"
               style={{ willChange: 'transform', transform: 'translateZ(0)' }}
             >
@@ -137,35 +140,16 @@ export const ProjectsSection: React.FC = () => {
 
                 {/* Content */}
                 <div className="relative h-full flex flex-col justify-end p-6">
-                  {/* Title */}
                   <h3 className="text-2xl md:text-3xl font-display font-bold text-terminal mb-3">
                     {project.title}
                   </h3>
                   <p className="text-terminal-muted text-base mb-4">
                     {project.description}
                   </p>
-                  <div className="flex gap-4">
-                    <a
-                      href={project.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-xs font-mono text-terminal hover:text-alert transition-colors"
-                    >
-                      <ExternalLink size={14} />
-                      VIEW PROJECT
-                    </a>
-                    {project.github && (
-                      <a
-                        href={project.github}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-xs font-mono text-terminal hover:text-alert transition-colors"
-                      >
-                        <Github size={14} />
-                        SOURCE
-                      </a>
-                    )}
-                  </div>
+                  <span className="flex items-center gap-2 text-xs font-mono text-terminal group-hover:text-alert transition-colors">
+                    <ExternalLink size={14} />
+                    VIEW PROJECT
+                  </span>
                 </div>
 
                 {/* Corner marks */}
@@ -174,7 +158,7 @@ export const ProjectsSection: React.FC = () => {
                 <div className="absolute bottom-3 left-3 w-5 h-5 border-l-2 border-b-2 border-terminal/20" />
                 <div className="absolute bottom-3 right-3 w-5 h-5 border-r-2 border-b-2 border-terminal/20" />
               </div>
-            </article>
+            </a>
           ))}
 
           {/* End spacer */}
@@ -187,7 +171,7 @@ export const ProjectsSection: React.FC = () => {
         {projects.map((project, index) => (
           <a
             key={project.id}
-            href={project.github || project.link}
+            href={project.link}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full mb-5 border border-terminal/25 overflow-hidden active:border-terminal/60 transition-colors"
@@ -222,18 +206,9 @@ export const ProjectsSection: React.FC = () => {
               <p className="text-terminal-dark text-xs leading-relaxed mb-3 line-clamp-2">
                 {project.description}
               </p>
-              <div className="flex gap-4">
-                {project.link && (
-                  <span className="text-[11px] font-mono text-terminal-dark flex items-center gap-1">
-                    <ExternalLink size={10} /> VIEW
-                  </span>
-                )}
-                {project.github && (
-                  <span className="text-[11px] font-mono text-terminal-dark flex items-center gap-1">
-                    <Github size={10} /> SOURCE
-                  </span>
-                )}
-              </div>
+              <span className="text-[11px] font-mono text-terminal-dark flex items-center gap-1">
+                <ExternalLink size={10} /> VIEW
+              </span>
             </div>
           </a>
         ))}
