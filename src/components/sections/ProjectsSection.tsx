@@ -6,14 +6,14 @@ import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExternalLink } from 'lucide-react';
-import { useProjects } from '@/hooks';
+import { PROJECTS } from '@/constants/data';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export const ProjectsSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { projects } = useProjects();
+  const projects = PROJECTS;
 
   useEffect(() => {
     // Skip all GSAP animations on mobile
