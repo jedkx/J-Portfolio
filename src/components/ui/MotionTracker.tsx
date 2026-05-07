@@ -2,146 +2,160 @@
 // MOTION TRACKER COMPONENT - Radar Style Footer
 // ============================================
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { usePrefersReducedMotion } from '@/hooks';
 
 interface MotionTrackerProps {
   forceAlert?: boolean;
 }
 
-function normalizeAngle(angle: number): number {
-  let n = angle % 360;
-  if (n < 0) n += 360;
-  return n;
-}
-
 export const MotionTracker: React.FC<MotionTrackerProps> = ({ forceAlert = false }) => {
-  const containerRef  = useRef<HTMLDivElement>(null);
-  const scanRef       = useRef<HTMLDivElement>(null);
-  const blipRef       = useRef<HTMLDivElement>(null);
-  const forceAlertRef = useRef(forceAlert);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isPressed, setIsPressed] = useState(false);
+  const [blipPosition, setBlipPosition] = useState({ x: 0, y: 0, angle: 0 });
+  const [radarRotation, setRadarRotation] = useState(0);
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  // Keep forceAlert current inside the RAF without re-registering the effect
-  forceAlertRef.current = forceAlert;
-
+  // Radar rotation animation (4 seconds per rotation)
   useEffect(() => {
     if (prefersReducedMotion) return;
-
-    const RADAR_RADIUS = 135;
-
-    const state = {
-      isPressed:     false,
-      blipX:         0,
-      blipY:         0,
-      blipAngle:     0,
-      radarRotation: 0,
-    };
 
     let animationId: number;
     const startTime = Date.now();
 
     const animate = () => {
-      state.radarRotation = (((Date.now() - startTime) / 4000) * 360) % 360;
-
-      if (scanRef.current) {
-        scanRef.current.style.transform = `rotate(${state.radarRotation}deg)`;
-      }
-
-      if (blipRef.current) {
-        const radarAngle = normalizeAngle(state.radarRotation);
-        const blipAngle  = normalizeAngle(state.blipAngle);
-        let angleDiff = Math.abs(radarAngle - blipAngle);
-        if (angleDiff > 180) angleDiff = 360 - angleDiff;
-
-        const isRadarNear  = angleDiff < 20;
-        const fadeDistance = Math.min(angleDiff / 20, 1);
-        const alert        = forceAlertRef.current || state.isPressed;
-
-        const opacity   = alert ? 1 : (isRadarNear ? 1 - fadeDistance * 0.5 : 0.2);
-        const color     = alert ? '#ff3333' : '#ffffff';
-        const glow      = alert
-          ? '0 0 20px 5px rgba(255, 51, 51, 0.8)'
-          : `0 0 ${8 + (1 - fadeDistance) * 12}px ${2 + (1 - fadeDistance) * 4}px rgba(255, 255, 255, ${0.3 + (1 - fadeDistance) * 0.4})`;
-
-        const el = blipRef.current;
-        el.style.transform  = `translate(${state.blipX}px, ${state.blipY}px)`;
-        el.style.background = color;
-        el.style.opacity    = String(opacity);
-        el.style.boxShadow  = glow;
-      }
-
+      const elapsed = Date.now() - startTime;
+      const rotation = (elapsed / 4000) * 360; // 4 seconds = 360 degrees
+      setRadarRotation(rotation % 360);
       animationId = requestAnimationFrame(animate);
     };
 
+    animate();
+    return () => cancelAnimationFrame(animationId);
+  }, [prefersReducedMotion]);
+
+  // Mouse tracking - map footer area to radar
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
     const handleMouseMove = (e: MouseEvent) => {
-      const footer = containerRef.current?.closest('footer');
+      if (!containerRef.current) return;
+
+      // Find footer element to map its area to radar
+      const footer = containerRef.current.closest('footer');
       if (!footer) return;
 
-      const rect          = footer.getBoundingClientRect();
-      const centerX       = rect.left + rect.width / 2;
-      const centerY       = rect.top  + rect.height / 2;
-      const scaleX        = RADAR_RADIUS / (rect.width / 2);
-      const scaleY        = RADAR_RADIUS / (rect.height / 2);
+      const footerRect = footer.getBoundingClientRect();
+      
+      // Calculate mouse position relative to footer
+      const footerCenterX = footerRect.left + footerRect.width / 2;
+      const footerCenterY = footerRect.top + footerRect.height / 2;
+      const mouseDeltaX = e.clientX - footerCenterX;
+      const mouseDeltaY = e.clientY - footerCenterY;
+      
+      // Map footer dimensions to radar dimensions
+      const footerRadiusX = footerRect.width / 2;
+      const footerRadiusY = footerRect.height / 2;
+      const radarRadius = 135; // Radar visual radius
+      
+      // Scale mouse position from footer space to radar space
+      const scaleX = radarRadius / footerRadiusX;
+      const scaleY = radarRadius / footerRadiusY;
+      
+      let blipX = mouseDeltaX * scaleX;
+      let blipY = mouseDeltaY * scaleY;
+      
+      // Clamp to radar circle
+      const distance = Math.sqrt(blipX * blipX + blipY * blipY);
+      if (distance > radarRadius) {
+        const scale = radarRadius / distance;
+        blipX *= scale;
+        blipY *= scale;
+      }
+      
+      // Calculate angle
+      const angle = Math.atan2(blipY, blipX) * (180 / Math.PI);
 
-      let bx = (e.clientX - centerX) * scaleX;
-      let by = (e.clientY - centerY) * scaleY;
-
-      const dist = Math.sqrt(bx * bx + by * by);
-      if (dist > RADAR_RADIUS) { bx *= RADAR_RADIUS / dist; by *= RADAR_RADIUS / dist; }
-
-      state.blipX     = bx;
-      state.blipY     = by;
-      state.blipAngle = Math.atan2(by, bx) * (180 / Math.PI);
+      setBlipPosition({ 
+        x: blipX, 
+        y: blipY, 
+        angle: angle 
+      });
     };
 
-    const handleMouseDown = () => { state.isPressed = true; };
-    const handleMouseUp   = () => { state.isPressed = false; };
+    const handleMouseDown = () => setIsPressed(true);
+    const handleMouseUp = () => setIsPressed(false);
 
-    animationId = requestAnimationFrame(animate);
-    window.addEventListener('mousemove',  handleMouseMove);
-    window.addEventListener('mousedown',  handleMouseDown);
-    window.addEventListener('mouseup',    handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener('mousemove',  handleMouseMove);
-      window.removeEventListener('mousedown',  handleMouseDown);
-      window.removeEventListener('mouseup',    handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [prefersReducedMotion]);
 
-  if (prefersReducedMotion) return null;
+  // Check if radar line is near the blip (with proper angle normalization)
+  const normalizeAngle = (angle: number) => {
+    let normalized = angle % 360;
+    if (normalized < 0) normalized += 360;
+    return normalized;
+  };
+  
+  const radarAngle = normalizeAngle(radarRotation);
+  const blipAngle = normalizeAngle(blipPosition.angle);
+  
+  // Calculate shortest angle difference
+  let angleDiff = Math.abs(radarAngle - blipAngle);
+  if (angleDiff > 180) angleDiff = 360 - angleDiff;
+  
+  const isRadarNear = angleDiff < 20; // 20 degree tolerance
+  
+  // Calculate fade effect based on distance from radar
+  const fadeDistance = Math.min(angleDiff / 20, 1); // 0 = on radar, 1 = far from radar
+  const blipOpacity = forceAlert ? 1 : (isPressed ? 1 : (isRadarNear ? (1 - fadeDistance * 0.7) : 0)); // Gradual fade
+  const blipColor = forceAlert || isPressed ? '#ff3333' : '#ffffff';
 
   return (
     <div className="relative">
       <div ref={containerRef} className="tracker-ui">
+        {/* Grid */}
         <div className="tracker-grid" />
+        
+        {/* Radar Waves - Expanding circles from center */}
         <div className="radar-wave" />
         <div className="radar-wave" />
         <div className="radar-wave" />
         <div className="radar-wave" />
         <div className="radar-wave" />
-
-        <div
-          ref={scanRef}
-          className="tracker-scan"
-          style={{ transition: 'none' }}
+        
+        {/* Scanning line */}
+        <div 
+          className="tracker-scan" 
+          style={{ 
+            transform: `rotate(${radarRotation}deg)`,
+            transition: 'none'
+          }}
         />
-
-        <div
-          ref={blipRef}
-          className="sensor-blip"
-          style={{
-            transform:  'translate(0px, 0px)',
-            background: '#ffffff',
-            opacity:    0.2,
-            boxShadow:  '0 0 8px 2px rgba(255,255,255,0.3)',
-            transition: 'opacity 0.3s ease, transform 0.15s ease-out, box-shadow 0.3s ease, background 0.3s ease',
+        
+        {/* Blip */}
+        <div 
+          className={`sensor-blip ${(isPressed || forceAlert) ? 'blip-pressed' : ''}`}
+          style={{ 
+            transform: `translate(${blipPosition.x}px, ${blipPosition.y}px)`,
+            background: blipColor,
+            opacity: blipOpacity,
+            boxShadow: (isPressed || forceAlert)
+              ? `0 0 20px 5px rgba(255, 51, 51, 0.8)`
+              : `0 0 ${10 + (1 - fadeDistance) * 10}px ${2 + (1 - fadeDistance) * 3}px rgba(255, 255, 255, ${0.5 + (1 - fadeDistance) * 0.3})`,
+            transition: 'opacity 0.3s ease, transform 0.15s ease-out, box-shadow 0.3s ease, background 0.3s ease'
           }}
         />
       </div>
-
+      
+      {/* Pulsing ring */}
       <div className="sensor-ring" />
     </div>
   );
