@@ -76,8 +76,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
       className="fixed inset-0 z-[200] bg-void flex items-center justify-center"
     >
       <div className="text-center">
-        {/* Logo - Bigger and with glow */}
-        <div className="text-terminal text-6xl md:text-7xl font-display font-black tracking-tighter mb-12 animate-pulse">
+        {/* Logo */}
+        <div className="text-terminal text-4xl md:text-5xl font-display font-black tracking-tighter mb-10 animate-pulse">
           HELLO <span className="text-alert">FRIEND</span>
         </div>
 

@@ -1,4 +1,5 @@
 export { Button } from './Button';
+export { ErrorBoundary } from './ErrorBoundary';
 export { GlitchText } from './GlitchText';
 export { Typewriter } from './Typewriter';
 export { Terminal } from './Terminal';

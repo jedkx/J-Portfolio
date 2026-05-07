@@ -18,7 +18,7 @@ export const useMediaQuery = (query: string): boolean => {
     media.addEventListener('change', listener);
     
     return () => media.removeEventListener('change', listener);
-  }, [matches, query]);
+  }, [query]);
 
   return matches;
 };
@@ -75,21 +75,21 @@ export const useIntersectionObserver = (
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [hasIntersected, setHasIntersected] = useState(false);
   const ref = useRef<HTMLElement>(null);
+  // Capture options once — passing an inline object literal would otherwise
+  // recreate the observer on every render due to referential inequality.
+  const optionsRef = useRef(options);
 
   useEffect(() => {
     if (!ref.current) return;
 
     const observer = new IntersectionObserver(([entry]) => {
       setIsIntersecting(entry.isIntersecting);
-      if (entry.isIntersecting) {
-        setHasIntersected(true);
-      }
-    }, options);
+      if (entry.isIntersecting) setHasIntersected(true);
+    }, optionsRef.current);
 
     observer.observe(ref.current);
-
     return () => observer.disconnect();
-  }, [options]);
+  }, []);
 
   return { ref, isIntersecting, hasIntersected };
 };

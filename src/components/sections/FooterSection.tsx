@@ -83,7 +83,7 @@ export const FooterSection: React.FC = () => {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-mono text-sm text-terminal-muted hover:text-terminal transition-colors hoverable"
+                  className="font-mono text-sm text-terminal-muted hover:text-alert transition-colors hoverable"
                   onMouseEnter={() => setIsLinkHovered(true)}
                   onMouseLeave={() => setIsLinkHovered(false)}
                 >

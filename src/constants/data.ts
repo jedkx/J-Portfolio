@@ -1,16 +1,16 @@
 // ============================================
 // DATA CONSTANTS - Portfolio Content
-// Caner Coşkun - Software Engineer
 // ============================================
 
-import type { Project, Skill, SocialLink, NavItem } from '@/types';
+import type { Education, Experience, NavItem, Project, Skill, SocialLink } from '@/types';
 
 export const PROJECTS: Project[] = [
   {
     id: 'project-01',
     title: 'BELSISNET REPORTING PLATFORM',
     category: 'ENTERPRISE',
-    description: 'Enterprise municipal reporting system serving 200+ municipalities across Turkey. Full-stack development with role-based authorization, dynamic report management, version control, and 50% performance optimization through caching mechanisms.',
+    description:
+      'Enterprise municipal reporting system serving 200+ municipalities across Turkey. Full-stack development with role-based authorization, dynamic report management, version control, and 50% performance optimization through caching mechanisms.',
     imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1600&auto=format&fit=crop',
     tags: ['ASP.NET Core', 'DevExpress', 'Entity Framework', 'SQL Server', 'RBAC'],
     link: 'https://belsis.com.tr',
@@ -20,7 +20,8 @@ export const PROJECTS: Project[] = [
     id: 'project-02',
     title: 'PWNAGOTCHI',
     category: 'HARDWARE',
-    description: 'AI-powered WiFi security research device using Raspberry Pi Zero W. Deep reinforcement learning for network analysis and security testing with custom OLED interface.',
+    description:
+      'AI-powered WiFi security research device using Raspberry Pi Zero W. Deep reinforcement learning for network analysis and security testing with custom OLED interface.',
     imageUrl: 'https://miro.medium.com/v2/resize:fit:720/format:webp/0*ZyM9WnUwk-sXjjha',
     tags: ['Raspberry Pi', 'Python', 'Machine Learning', 'Cybersecurity', 'IoT'],
     link: 'https://medium.com/@ccoskun742/pwnagotchi-setup-a-practical-guide-and-my-advanced-usage-notes-0c698bc07b28',
@@ -29,23 +30,18 @@ export const PROJECTS: Project[] = [
 ];
 
 export const SKILLS: Skill[] = [
-  // Programming Languages
   { name: 'C', level: 85, category: 'backend' },
   { name: 'C#', level: 88, category: 'backend' },
   { name: 'JavaScript', level: 90, category: 'frontend' },
   { name: 'TypeScript', level: 85, category: 'frontend' },
   { name: 'Python', level: 80, category: 'backend' },
   { name: 'GDScript', level: 75, category: 'backend' },
-  
-  // Frameworks
   { name: 'ASP.NET Core', level: 88, category: 'backend' },
   { name: 'MVC', level: 85, category: 'backend' },
   { name: 'Entity Framework', level: 85, category: 'backend' },
   { name: 'React', level: 88, category: 'frontend' },
   { name: 'Bootstrap', level: 88, category: 'frontend' },
   { name: 'Tailwind CSS', level: 90, category: 'frontend' },
-  
-  // Tools & Methodologies
   { name: 'Git', level: 88, category: 'tools' },
   { name: 'Docker', level: 75, category: 'tools' },
   { name: 'Jira', level: 85, category: 'tools' },
@@ -53,8 +49,6 @@ export const SKILLS: Skill[] = [
   { name: 'DevExpress', level: 80, category: 'tools' },
   { name: 'Scrum/Agile', level: 85, category: 'tools' },
   { name: 'SQL Server', level: 82, category: 'backend' },
-  
-  // Creative
   { name: 'Premiere Pro', level: 95, category: 'tools' },
   { name: 'After Effects', level: 90, category: 'tools' },
   { name: 'Photoshop', level: 92, category: 'tools' },
@@ -74,80 +68,105 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'CONTACT', href: '#contact' },
 ];
 
+export const UI_STRINGS = {
+  scrollHint: '⇆ Scroll',
+  syncingGitHub: 'SYNCING GITHUB...',
+} as const;
+
 export const TYPEWRITER_TEXTS = [
   'Full-Stack Developer at Belsis',
-  'Software Engineering Student at Atılım',
+  'Software Engineering Student at Atilim',
   'Video Editor with 6+ Years Experience',
   'Cybersecurity & Ethical Hacking Enthusiast',
 ];
 
 export const CONTACT_EMAIL = 'ccoskun742@gmail.com';
 
-// About Section
-export const MANIFESTO_QUOTE = "One Code to rule them all.";
+export const EXPERIENCE: Experience[] = [
+  {
+    role: 'Full-Stack Developer',
+    company: 'Belsis',
+    period: '2025 - Present',
+    description:
+      'Enterprise municipal reporting platform serving 200+ municipalities across Turkey. Role-based authorization, dynamic report management, and 50% performance optimization through caching.',
+    tech: ['ASP.NET Core', 'DevExpress', 'Entity Framework', 'SQL Server', 'MVC', 'Scrum/Agile'],
+  },
+];
+
+export const EDUCATION: Education[] = [
+  {
+    degree: 'B.Sc. Software Engineering',
+    school: 'Atilim University',
+    period: '2021 - 2026',
+    location: 'Ankara, Turkey',
+    note: 'Expected graduation 2026',
+  },
+];
+
+export const MANIFESTO_QUOTE = 'One Code to rule them all.';
 
 export const MANIFESTO_ITEMS = [
-  { 
-    text: 'HELLO FRIEND', 
-    color: '#ff0000', // Mr. Robot - pure red (fsociety)
-    textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
-    font: 'Consolas, "Courier New", monospace',
-    fontWeight: '900',
-    letterSpacing: '0.3em',
-    fontSize: '1em'
-  },
-  { text: '•', color: '#555555', font: 'inherit' },
-  { 
-    text: 'SHALL NOT PASS', 
-    color: '#9fdc7c', // LOTR - elvish green glow
-    textShadow: '2px 2px 0px rgba(0,0,0,0.9), -1px -1px 0px rgba(0,0,0,0.5)',
-    font: '"Times New Roman", Georgia, serif',
-    fontWeight: '700',
-    letterSpacing: '0.2em',
-    fontSize: '1em'
-  },
-  { text: '•', color: '#555555', font: 'inherit' },
-  { 
-    text: 'TIME IS A FLAT CIRCLE', 
-    color: '#ffffff', // True Detective - newspaper noir style (white on black)
-    textShadow: '3px 3px 0px #000000, -1px -1px 0px #000000',
-    font: '"Century Gothic", "Trebuchet MS", sans-serif',
-    fontWeight: '900',
-    letterSpacing: '0.08em',
-    fontSize: '1em'
-  },
-  { text: '•', color: '#555555', font: 'inherit' },
-  { 
-    text: 'VALAR MORGHULIS', 
-    color: '#d63031', // GoT - Red God / blood red
-    textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
-    font: '"Garamond", "Times New Roman", serif',
-    fontWeight: '700',
-    letterSpacing: '0.15em',
-    fontSize: '1em'
-  },
-  { text: '•', color: '#555555', font: 'inherit' },
-  { 
-    text: 'ACCIO SOLUTION', 
-    color: '#5899e2', // Harry Potter - Ravenclaw vibrant blue
+  {
+    text: 'ACCIO SOLUTION',
+    color: '#5899e2',
     textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
     font: '"Book Antiqua", Palatino, Georgia, serif',
     fontWeight: '700',
     letterSpacing: '0.1em',
-    fontSize: '1em'
+    fontSize: '1em',
+  },
+  { text: '•', color: '#555555', font: 'inherit' },
+  {
+    text: 'HELLO FRIEND',
+    color: '#ff0000',
+    textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
+    font: 'Consolas, "Courier New", monospace',
+    fontWeight: '900',
+    letterSpacing: '0.3em',
+    fontSize: '1em',
+  },
+  { text: '•', color: '#555555', font: 'inherit' },
+  {
+    text: 'SHALL NOT PASS',
+    color: '#9fdc7c',
+    textShadow: '2px 2px 0px rgba(0,0,0,0.9), -1px -1px 0px rgba(0,0,0,0.5)',
+    font: '"Times New Roman", Georgia, serif',
+    fontWeight: '700',
+    letterSpacing: '0.2em',
+    fontSize: '1em',
+  },
+  { text: '•', color: '#555555', font: 'inherit' },
+  {
+    text: 'TIME IS A FLAT CIRCLE',
+    color: '#ffffff',
+    textShadow: '3px 3px 0px #000000, -1px -1px 0px #000000',
+    font: '"Century Gothic", "Trebuchet MS", sans-serif',
+    fontWeight: '900',
+    letterSpacing: '0.08em',
+    fontSize: '1em',
+  },
+  { text: '•', color: '#555555', font: 'inherit' },
+  {
+    text: 'VALAR MORGHULIS',
+    color: '#d63031',
+    textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
+    font: '"Garamond", "Times New Roman", serif',
+    fontWeight: '700',
+    letterSpacing: '0.15em',
+    fontSize: '1em',
   },
   { text: '•', color: '#555555', font: 'inherit' },
 ];
 
-// Personal Info
 export const PERSONAL_INFO = {
-  name: 'Caner Coşkun',
+  name: 'Caner Coskun',
   title: 'Full-Stack Developer & Software Engineering Student',
-  university: 'Atılım University',
+  university: 'Atilim University',
   graduationYear: 2026,
   location: 'Ankara, Turkey',
   currentRole: 'Full-Stack Developer at Belsis (Active)',
-  experience: 'Developing enterprise municipal reporting platform serving 200+ municipalities nationwide. Experienced in ASP.NET Core, DevExpress, Entity Framework, SQL Server optimization, role-based authorization systems, and Agile/Scrum methodology with Jira.',
+  experience:
+    'Developing enterprise municipal reporting platform serving 200+ municipalities nationwide. Experienced in ASP.NET Core, DevExpress, Entity Framework, SQL Server optimization, role-based authorization systems, and Agile/Scrum methodology with Jira.',
   status: 'Full-Stack Developer at Belsis',
   isAvailable: false,
 };

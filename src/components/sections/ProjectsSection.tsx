@@ -182,74 +182,62 @@ export const ProjectsSection: React.FC = () => {
         </div>
 
 
-      {/* Mobile - Simple Vertical List */}
-      {/* Mobile - Modern Scrollable Card List */}
-      <div className="md:hidden pb-6 px-2">
+      {/* Mobile - Vertical Card List */}
+      <div className="md:hidden pt-4 pb-8 px-4">
         {projects.map((project, index) => (
-          <div
+          <a
             key={project.id}
-            className="rounded-xl bg-void border border-terminal/30 shadow-lg overflow-hidden relative flex flex-col w-full max-w-xs mx-auto mb-6"
+            href={project.github || project.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full mb-5 border border-terminal/25 overflow-hidden active:border-terminal/60 transition-colors"
           >
-            {/* Image & Overlay */}
-            <div className="relative h-64 md:h-36">
-                <img
-                  src={project.imageUrl}
-                  alt={project.title}
-                  className="w-full h-full object-cover grayscale opacity-50"
-                  loading="lazy"
-                  decoding="async"
-                  width={800}
-                  height={480}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-void via-void/60 to-transparent" />
-                <div className="absolute top-2 left-2 flex items-center gap-2">
-                  <span className="font-mono text-[10px] text-terminal-dark bg-void/80 px-2 py-1 rounded">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className="font-mono text-[10px] text-alert bg-void/80 px-2 py-1 rounded">
-                    {project.category}
-                  </span>
-                </div>
-              </div>
-              {/* Content */}
-              <div className="flex-1 flex flex-col p-4 min-h-[180px] md:min-h-0">
-                <h3 className="text-lg font-display font-bold text-terminal mb-1 truncate">
-                  {project.title}
-                </h3>
-                <p className="text-terminal-muted text-xs mb-3 line-clamp-3">
-                  {project.description}
-                </p>
-                <div className="flex gap-4 mt-auto">
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-mono text-terminal flex items-center gap-1 hover:text-alert transition-colors"
-                  >
-                    <ExternalLink size={11} /> VIEW
-                  </a>
-                  {project.github && (
-                    <a
-                      href={project.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] font-mono text-terminal flex items-center gap-1 hover:text-alert transition-colors"
-                    >
-                      <Github size={11} /> CODE
-                    </a>
-                  )}
-                </div>
+            {/* Image */}
+            <div className="relative h-48">
+              <img
+                src={project.imageUrl}
+                alt={project.title}
+                className="w-full h-full object-cover grayscale opacity-60"
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+                width={800}
+                height={480}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-void via-void/50 to-transparent pointer-events-none" />
+              <div className="absolute top-2 left-2 flex items-center gap-2">
+                <span className="font-mono text-[10px] text-terminal-dark bg-void/80 px-2 py-0.5">
+                  FILE_{String(index + 1).padStart(2, '0')}
+                </span>
+                <span className="font-mono text-[10px] text-alert bg-void/80 px-2 py-0.5">
+                  {project.category}
+                </span>
               </div>
             </div>
-          ))}
-        </div>
-        {/* Scroll hint */}
-        <div className="flex justify-center mt-2">
-          <span className="text-terminal-dark text-xs font-mono animate-pulse">
-            {isLoading ? 'SYNCING GITHUB...' : '⇆ Kaydır'}
-          </span>
-        </div>
-
+            {/* Content */}
+            <div className="p-4 bg-void">
+              <h3 className="font-display font-bold text-terminal text-lg mb-1">
+                {project.title}
+              </h3>
+              <p className="text-terminal-dark text-xs leading-relaxed mb-3 line-clamp-2">
+                {project.description}
+              </p>
+              <div className="flex gap-4">
+                {project.link && (
+                  <span className="text-[11px] font-mono text-terminal-dark flex items-center gap-1">
+                    <ExternalLink size={10} /> VIEW
+                  </span>
+                )}
+                {project.github && (
+                  <span className="text-[11px] font-mono text-terminal-dark flex items-center gap-1">
+                    <Github size={10} /> SOURCE
+                  </span>
+                )}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
       {/* Desktop Scroll hint */}
       <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
         <div className="w-12 h-px bg-gradient-to-r from-transparent to-terminal/40" />

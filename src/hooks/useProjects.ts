@@ -5,6 +5,35 @@ import { mergeProjects } from '@/lib/mergeProjects';
 import { mapRepoToProject } from '@/lib/projectMapper';
 import type { Project } from '@/types';
 
+const CACHE_KEY = 'portfolio_projects_cache';
+const CACHE_TTL_MS = 30 * 60 * 1000;
+
+interface ProjectsCache {
+  data: Project[];
+  timestamp: number;
+}
+
+function readCache(): Project[] | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ProjectsCache;
+    if (Date.now() - parsed.timestamp > CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(data: Project[]): void {
+  try {
+    const entry: ProjectsCache = { data, timestamp: Date.now() };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
+  } catch {
+    // Quota exceeded or private browsing — fail silently
+  }
+}
+
 interface UseProjectsState {
   projects: Project[];
   isLoading: boolean;
@@ -12,14 +41,18 @@ interface UseProjectsState {
 }
 
 export function useProjects(): UseProjectsState {
-  const [projects, setProjects] = useState<Project[]>(PROJECTS);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [projects, setProjects] = useState<Project[]>(() => readCache() ?? PROJECTS);
+  const [isLoading, setIsLoading] = useState<boolean>(() => readCache() === null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (readCache() !== null) {
+      return;
+    }
+
     let isActive = true;
 
-    async function loadProjects() {
+    async function loadProjects(): Promise<void> {
       try {
         const repositories = await fetchPublicRepos();
         const activeRepositories = repositories.filter((repo) => !repo.fork && !repo.archived);
@@ -31,7 +64,9 @@ export function useProjects(): UseProjectsState {
         );
 
         if (isActive) {
-          setProjects(mergeProjects(PROJECTS, githubProjects));
+          const merged = mergeProjects(PROJECTS, githubProjects);
+          setProjects(merged);
+          writeCache(merged);
           setError(null);
         }
       } catch (loadError) {

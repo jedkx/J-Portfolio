@@ -90,3 +90,19 @@ export interface ParticleConfig {
   size: number;
   connectionDistance: number;
 }
+
+export interface Experience {
+  role: string;
+  company: string;
+  period: string;
+  description: string;
+  tech: string[];
+}
+
+export interface Education {
+  degree: string;
+  school: string;
+  period: string;
+  location: string;
+  note?: string;
+}

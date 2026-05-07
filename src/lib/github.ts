@@ -121,15 +121,20 @@ async function resolveReadmeScreenshot(repo: GitHubRepo): Promise<string | null>
         (a, b) => scoreImageCandidate(b) - scoreImageCandidate(a)
       );
 
-      for (const imagePath of rankedCandidates) {
-        const resolvedImageUrl = toAbsoluteReadmeImageUrl(repo, imagePath);
-        const imageResponse = await fetch(resolvedImageUrl, { method: 'HEAD' });
-        if (imageResponse.ok) {
-          return resolvedImageUrl;
-        }
+      const imageChecks = rankedCandidates.map((imagePath) => {
+        const url = toAbsoluteReadmeImageUrl(repo, imagePath);
+        return fetch(url, { method: 'HEAD' })
+          .then((r) => (r.ok ? url : Promise.reject()))
+          .catch(() => Promise.reject());
+      });
+
+      try {
+        return await Promise.any(imageChecks);
+      } catch {
+        continue;
       }
-    } catch {
-      // Continue with next README candidate.
+    } catch (err) {
+      console.debug('[github] Failed to fetch README candidate:', candidate, err);
     }
   }
 
@@ -138,21 +143,19 @@ async function resolveReadmeScreenshot(repo: GitHubRepo): Promise<string | null>
 
 export async function resolveRepoScreenshot(repo: GitHubRepo): Promise<string | null> {
   const readmeScreenshot = await resolveReadmeScreenshot(repo);
-  if (readmeScreenshot) {
-    return readmeScreenshot;
-  }
+  if (readmeScreenshot) return readmeScreenshot;
 
-  for (const candidate of SCREENSHOT_CANDIDATES) {
-    const assetUrl = buildRawAssetUrl(repo, candidate);
-    try {
-      const response = await fetch(assetUrl, { method: 'HEAD' });
-      if (response.ok) {
-        return assetUrl;
-      }
-    } catch {
-      // Keep probing candidates; network failures should not break the entire repo mapping flow.
-    }
-  }
+  // Check all candidates in parallel — return the first that responds 200
+  const checks = SCREENSHOT_CANDIDATES.map((candidate) => {
+    const url = buildRawAssetUrl(repo, candidate);
+    return fetch(url, { method: 'HEAD' })
+      .then((r) => (r.ok ? url : Promise.reject()))
+      .catch(() => Promise.reject());
+  });
 
-  return null;
+  try {
+    return await Promise.any(checks);
+  } catch {
+    return null;
+  }
 }

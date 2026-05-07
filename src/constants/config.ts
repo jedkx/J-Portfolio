@@ -86,3 +86,5 @@ export const GSAP_DEFAULTS = {
 
 export type Theme = typeof THEME;
 export type AnimationConfigType = typeof ANIMATION_CONFIG;
+
+export const CV_DRIVE_FILE_ID = '107oP8Qt9F1LHSN4uTkSDpXHB6huQOUo2';

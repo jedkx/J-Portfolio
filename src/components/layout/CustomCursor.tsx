@@ -133,41 +133,31 @@ export const CustomCursor: React.FC = () => {
     window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
 
-    // Hover effect for interactive elements
-    const addHoverListeners = () => {
-      const hoverables = document.querySelectorAll(
-        'a, button, [role="button"], .hoverable, input, textarea'
-      );
-      hoverables.forEach((el) => {
-        el.addEventListener('mouseenter', onMouseEnterHoverable);
-        el.addEventListener('mouseleave', onMouseLeaveHoverable);
-      });
-      return hoverables;
+    // Event delegation — single listener on body handles all current and future interactive elements
+    const HOVERABLE_SELECTOR = 'a, button, [role="button"], .hoverable, input, textarea';
+
+    const onMouseOver = (e: MouseEvent) => {
+      if ((e.target as Element).closest(HOVERABLE_SELECTOR)) onMouseEnterHoverable();
     };
 
-    let hoverables = addHoverListeners();
+    const onMouseOut = (e: MouseEvent) => {
+      const target = (e.target as Element).closest(HOVERABLE_SELECTOR);
+      if (target) {
+        const related = e.relatedTarget as Element | null;
+        if (!related || !target.contains(related)) onMouseLeaveHoverable();
+      }
+    };
 
-    // MutationObserver to add listeners to dynamically added elements
-    const observer = new MutationObserver(() => {
-      hoverables.forEach((el) => {
-        el.removeEventListener('mouseenter', onMouseEnterHoverable);
-        el.removeEventListener('mouseleave', onMouseLeaveHoverable);
-      });
-      hoverables = addHoverListeners();
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+    document.body.addEventListener('mouseover', onMouseOver);
+    document.body.addEventListener('mouseout', onMouseOut);
 
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
-      observer.disconnect();
-      hoverables.forEach((el) => {
-        el.removeEventListener('mouseenter', onMouseEnterHoverable);
-        el.removeEventListener('mouseleave', onMouseLeaveHoverable);
-      });
+      document.body.removeEventListener('mouseover', onMouseOver);
+      document.body.removeEventListener('mouseout', onMouseOut);
     };
   }, [prefersReducedMotion]);
 
