@@ -13,7 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 export const ProjectsSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { projects, isLoading } = useProjects();
+  const { projects } = useProjects();
 
   useEffect(() => {
     // Skip all GSAP animations on mobile

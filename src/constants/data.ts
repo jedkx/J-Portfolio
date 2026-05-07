@@ -68,11 +68,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'CONTACT', href: '#contact' },
 ];
 
-export const UI_STRINGS = {
-  scrollHint: '⇆ Scroll',
-  syncingGitHub: 'SYNCING GITHUB...',
-} as const;
-
 export const TYPEWRITER_TEXTS = [
   'Full-Stack Developer at Belsis',
   'Software Engineering Student at Atilim',

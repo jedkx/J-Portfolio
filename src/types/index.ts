@@ -45,12 +45,6 @@ export interface Skill {
 
 export type SkillCategory = 'frontend' | 'backend' | 'tools' | 'design';
 
-export interface BootLogItem {
-  text: string;
-  highlight?: boolean;
-  status?: 'success' | 'warning' | 'error';
-}
-
 export interface SocialLink {
   label: string;
   url: string;
@@ -81,14 +75,6 @@ export interface TerminalLine {
   text: string;
   delay: number;
   type: 'normal' | 'success' | 'error' | 'warning';
-}
-
-export interface ParticleConfig {
-  count: number;
-  color: string;
-  speed: number;
-  size: number;
-  connectionDistance: number;
 }
 
 export interface Experience {

@@ -4,10 +4,7 @@
   "type": "module",
   "description": "NOSTROMO - Professional Portfolio with React, GSAP & Tailwind CSS",
   "scripts": {
-    "fetch-cv": "node scripts/fetch-cv.js",
-    "predev": "node scripts/fetch-cv.js",
     "dev": "vite",
-    "prebuild": "node scripts/fetch-cv.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
