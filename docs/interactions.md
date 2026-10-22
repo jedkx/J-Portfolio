@@ -11,6 +11,8 @@
 
 ## Discovery game
 
+- Who’s there? includes an always-visible three-step “How to play” panel beside the receiver (above it on mobile). The former “Where do I start?” button is removed; navbar “?” help remains available. Instructions explain actions without revealing the character.
+
 - Five random keys are attached to words from readable content sections. Decorative transition text, linked controls and the puzzle UI cannot receive keys.
 - Discovery automatically fills the matching slot and plays a short sound; no random inline popup or manual paste step.
 - The receiver target changes between openings. Locking it unlocks sonar even with zero fragments. Sonar remains unlocked after detuning; decryption still requires a currently locked receiver and all five keys.

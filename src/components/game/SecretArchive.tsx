@@ -3,17 +3,11 @@ import { useSecretGame } from './SecretGame';
 import { usePrefersReducedMotion } from '@/hooks';
 import { ARCHIVE_PASSPHRASE_HASHES } from '@/constants/secret';
 import { ContactTuner } from '@/components/sections/ContactTuner';
+import './receiver-guide.css';
 
 export const SecretArchive: React.FC = () => {
-  const {
-    fragments,
-    found,
-    openResident,
-    openResidentWithPassphrase,
-    residentOpen,
-    showHint,
-    unlockRadar,
-  } = useSecretGame();
+  const { fragments, found, openResident, openResidentWithPassphrase, residentOpen, unlockRadar } =
+    useSecretGame();
   const [input, setInput] = useState('');
   const [signalLocked, setSignalLocked] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'decrypting' | 'revealing' | 'open'>('idle');
@@ -110,13 +104,38 @@ export const SecretArchive: React.FC = () => {
         <div className="secret-receiver-layout">
           <div className="secret-receiver-intro">
             <span className="secret-eyebrow">PRIVATE CHANNEL / 005</span>
-            <h4>
+            <h4 className="receiver-title">
               Who’s there<span className="accent">?</span>
             </h4>
-            <p>Five fragments. One clean signal.</p>
-            <button type="button" className="secret-receiver-help hoverable" onClick={showHint}>
-              Where do I start? <span aria-hidden="true">↗</span>
-            </button>
+            <aside className="receiver-guide" aria-labelledby="receiver-guide-title">
+              <h5 id="receiver-guide-title">How to play</h5>
+              <ol>
+                <li>
+                  <span aria-hidden="true">1</span>
+                  <p>
+                    <strong>Move the slider.</strong> Stop when it says “Signal connected”. A radar
+                    will appear.
+                  </p>
+                </li>
+                <li>
+                  <span aria-hidden="true">2</span>
+                  <p>
+                    <strong>Follow the radar dots.</strong> Scroll around the site. Click or tap the
+                    words they point to.
+                  </p>
+                </li>
+                <li>
+                  <span aria-hidden="true">3</span>
+                  <p>
+                    <strong>Find all 5 keys.</strong> Come back here, connect the signal and press
+                    Decrypt.
+                  </p>
+                </li>
+              </ol>
+              <p className="receiver-guide-note">
+                Keys save automatically. You don’t need to copy anything.
+              </p>
+            </aside>
           </div>
           <div className="receiver-instrument">
             <ContactTuner
