@@ -1,0 +1,142 @@
+/* The original repository terminal, isolated from the cinematic scene styles. */
+.experience-profile .neofetch-shell.terminal-original {
+  display: block;
+  min-height: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: 18px 24px 24px;
+  background: #0a0a0c;
+  color: #ccc;
+  font:
+    13px/1.55 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    'Liberation Mono',
+    monospace;
+}
+.terminal-original-prompt {
+  padding-bottom: 10px;
+  color: #aaa;
+}
+.terminal-original-prompt > span:nth-child(2) {
+  color: #666;
+}
+.terminal-original-grid {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) minmax(320px, 0.95fr);
+  gap: 24px;
+  align-items: start;
+}
+.terminal-original-art {
+  padding-top: 14px;
+}
+.terminal-original-art pre {
+  margin: 0;
+  font:
+    13px/1.12 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  white-space: pre;
+  text-align: left;
+}
+.terminal-original-info,
+.terminal-original-github {
+  min-width: 0;
+}
+.terminal-original-separator {
+  color: #555;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.terminal-original-line {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px;
+  padding-block: 1px;
+}
+.terminal-original-line dt {
+  color: var(--theme-accent);
+  font-weight: 600;
+}
+.terminal-original-line dd {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.terminal-original-line dd > span {
+  color: #666;
+}
+.terminal-original-line dd > .secret-inline-fragment {
+  grid-column: 2;
+}
+.terminal-original-line a:hover {
+  color: var(--theme-accent);
+}
+.terminal-original-spacer {
+  height: 6px;
+}
+.terminal-original-cursor {
+  height: 18px;
+  margin-top: 8px;
+}
+.terminal-original-cursor .terminal-caret {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--theme-accent);
+}
+.terminal-original-scan {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--theme-accent), transparent);
+  box-shadow: 0 0 16px var(--theme-accent);
+}
+.experience-window[data-scene='about'] .window-dots i:nth-child(1) {
+  background: #ff5f57;
+}
+.experience-window[data-scene='about'] .window-dots i:nth-child(2) {
+  background: #ffbd2e;
+}
+.experience-window[data-scene='about'] .window-dots i:nth-child(3) {
+  background: #28ca41;
+}
+@media (max-width: 1099px) {
+  .terminal-original-grid {
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .terminal-original-github {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 767px) {
+  .experience-profile .neofetch-shell.terminal-original {
+    padding: 16px;
+    font-size: 12px;
+  }
+  .terminal-original-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .terminal-original-art {
+    text-align: center;
+    padding-top: 0;
+  }
+  .terminal-original-art pre {
+    display: inline-block;
+    font-size: 11px;
+  }
+  .terminal-original-line {
+    grid-template-columns: 70px minmax(0, 1fr);
+  }
+}

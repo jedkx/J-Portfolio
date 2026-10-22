@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 
 export const usePrefersReducedMotion = (): boolean => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () =>
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -22,15 +25,25 @@ export const useScrollPosition = () => {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
       const currentScrollY = window.scrollY;
-      setScrollDirection(currentScrollY > lastScrollY.current ? 'down' : 'up');
+      if (Math.abs(currentScrollY - lastScrollY.current) > 2)
+        setScrollDirection(currentScrollY > lastScrollY.current ? 'down' : 'up');
       lastScrollY.current = currentScrollY;
       setScrollY(currentScrollY);
     };
+    const handleScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
 
+    update();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
   return { scrollY, scrollDirection };

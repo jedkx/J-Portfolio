@@ -1,228 +1,138 @@
-// ============================================
-// PROJECTS SECTION - DARK MATTER FILES
-// ============================================
-
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ExternalLink } from 'lucide-react';
-import { PROJECTS } from '@/constants/data';
+import { ArrowUpRight } from 'lucide-react';
+import { useProjects } from '@/hooks/useProjects';
+import { usePrefersReducedMotion } from '@/hooks';
+import { GITHUB_USERNAME } from '@/lib/github';
 
-gsap.registerPlugin(ScrollTrigger);
+import { RepositoryVisual } from '@/features/portfolio/RepositoryVisual';
+export { RepositoryVisual };
 
 export const ProjectsSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const projects = PROJECTS;
+  const { projects, status, retry } = useProjects();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
-    // Skip all GSAP animations on mobile
-    const isMobile = window.innerWidth < 768;
-    
-    if (isMobile) {
-      // No GSAP on mobile - just show content
-      return;
-    }
-
+    if (prefersReducedMotion || !projects.length) return;
     const ctx = gsap.context(() => {
-      // Header animation - desktop only
-      gsap.fromTo(
-        '.projects-header',
-        { opacity: 0, y: 60 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: 'power3.out',
+      gsap.utils.toArray<HTMLElement>('.repository-scene').forEach((scene) => {
+        const card = scene.querySelector('.repository-card');
+        const timeline = gsap.timeline({
           scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 80%',
-            toggleActions: 'play none none reverse',
-          },
-        }
-      );
-
-      // Horizontal scroll for projects - desktop only
-      if (scrollContainerRef.current) {
-        const scrollWidth = scrollContainerRef.current.scrollWidth;
-        const viewportWidth = window.innerWidth;
-
-        gsap.to(scrollContainerRef.current, {
-          x: -(scrollWidth - viewportWidth + 100),
-          ease: 'none',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top top',
-            end: `+=${scrollWidth * 0.6}`,
-            scrub: 0.1,
-            pin: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
+            trigger: scene,
+            start: 'top 90%',
+            end: 'top 8%',
+            scrub: 0.7,
           },
         });
-      }
+        timeline.fromTo(
+          card,
+          { clipPath: 'inset(12% 9% 12% 9% round 3px)' },
+          { clipPath: 'inset(0% 0% 0% 0% round 3px)', ease: 'power2.out' },
+          0
+        );
+        timeline.fromTo(
+          scene.querySelector('.repository-visual-inner'),
+          { scale: 1.35 },
+          { scale: 1, ease: 'none' },
+          0
+        );
+        timeline.fromTo(
+          scene.querySelector('.repository-copy'),
+          { y: 70, opacity: 0 },
+          { y: 0, opacity: 1, ease: 'power2.out' },
+          0.2
+        );
+        const artwork = scene.querySelector('.artifact-orbits');
+        if (artwork)
+          gsap.to(artwork, {
+            rotation: 65,
+            svgOrigin: '400 300',
+            ease: 'none',
+            scrollTrigger: {
+              trigger: scene,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 1,
+            },
+          });
+      });
     }, sectionRef);
-
+    ScrollTrigger.refresh();
     return () => ctx.revert();
-  }, [projects.length]);
+  }, [projects.length, prefersReducedMotion]);
 
   return (
-    <section ref={sectionRef} id="projects" className="relative bg-void scroll-mt-16 md:min-h-screen md:overflow-hidden md:snap-start md:snap-always">
-      {/* Header - Mobile: relative, Desktop: absolute */}
-      <div className="projects-header md:absolute md:top-20 md:left-8 relative pt-8 pb-4 px-4 md:p-0 z-10">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-2 h-2 bg-alert animate-pulse" />
-          <span className="font-mono text-[10px] text-terminal-dark tracking-[0.3em]">SELECTED WORK</span>
+    <section ref={sectionRef} id="projects" className="repository-section editorial-shell">
+      <header className="repository-heading">
+        <div>
+          <span className="micro-label muted">SELECTED FROM GITHUB</span>
+          <h2 className="editorial-heading">
+            PROJECTS<span className="accent">.</span>
+          </h2>
         </div>
-        <h2 className="text-4xl md:text-5xl lg:text-7xl font-display font-black text-terminal relative group">
-          <span className="relative">
-            FILES
-            <span className="absolute inset-0 text-alert/20 translate-x-[2px] translate-y-[2px] -z-10">FILES</span>
-          </span>
-        </h2>
-        <div className="w-24 h-px bg-gradient-to-r from-terminal/50 to-transparent mt-3" />
-      </div>
-
-      {/* Counter */}
-      <div className="absolute top-8 right-4 md:right-8 z-10 text-right">
-        <div className="font-mono text-2xl md:text-3xl text-terminal font-bold">
-          {String(projects.length).padStart(2, '0')}
+        <a
+          href={`https://github.com/${GITHUB_USERNAME}?tab=repositories`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="signal-link hoverable"
+        >
+          ALL REPOSITORIES <ArrowUpRight size={18} />
+        </a>
+      </header>
+      {status === 'loading' && (
+        <p className="repository-state" role="status">
+          Loading projects from GitHub…
+        </p>
+      )}
+      {status === 'error' && (
+        <div className="repository-state" role="status">
+          <p>GitHub is unavailable right now.</p>
+          <button type="button" className="signal-link hoverable" onClick={retry}>
+            TRY AGAIN <ArrowUpRight size={16} />
+          </button>
         </div>
-        <span className="font-mono text-[10px] text-terminal-dark tracking-[0.2em]">
-          PROJECTS
-        </span>
-      </div>
-
-      {/* Desktop - Horizontal Scroll Container */}
-      <div
-        ref={scrollContainerRef}
-        className="hidden md:flex items-center gap-8 px-8 h-screen"
-        style={{ width: 'max-content', willChange: 'transform', transform: 'translateZ(0)' }}
-      >
-          {/* Spacer for header visibility */}
-          <div className="w-[30vw] flex-shrink-0" />
-
-          {/* Project Cards */}
-          {projects.map((project, index) => (
-            <a
-              key={project.id}
-              href={project.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="project-card-file group flex-shrink-0 w-[60vw] md:w-[45vw] lg:w-[35vw] h-[55vh] relative hoverable"
-              style={{ willChange: 'transform', transform: 'translateZ(0)' }}
-            >
-              {/* File Label */}
-              <div className="absolute -top-5 left-0 flex items-center gap-4">
-                <span className="font-mono text-[10px] text-terminal-dark tracking-widest">
-                  FILE_{String(index + 1).padStart(2, '0')}
-                </span>
-                <span className="font-mono text-[10px] text-alert">{project.category}</span>
-              </div>
-
-              {/* Card Content */}
-              <div className="relative h-full border border-terminal/20 overflow-hidden group-hover:border-terminal/40 transition-colors duration-500">
-                {/* Image */}
-                <div className="absolute inset-0">
-                  <img
-                    src={project.imageUrl}
-                    alt={project.title}
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                    loading="lazy"
-                    decoding="async"
-                    width={1200}
-                    height={800}
-                    style={{ willChange: 'transform', transform: 'translateZ(0)' }}
-                  />
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-void/70 group-hover:bg-void/50 transition-colors duration-500" />
-                </div>
-
-                {/* Content */}
-                <div className="relative h-full flex flex-col justify-end p-6">
-                  <h3 className="text-2xl md:text-3xl font-display font-bold text-terminal mb-3">
-                    {project.title}
-                  </h3>
-                  <p className="text-terminal-muted text-base mb-4">
-                    {project.description}
-                  </p>
-                  <span className="flex items-center gap-2 text-xs font-mono text-terminal group-hover:text-alert transition-colors">
-                    <ExternalLink size={14} />
-                    VIEW PROJECT
-                  </span>
-                </div>
-
-                {/* Corner marks */}
-                <div className="absolute top-3 left-3 w-5 h-5 border-l-2 border-t-2 border-terminal/20" />
-                <div className="absolute top-3 right-3 w-5 h-5 border-r-2 border-t-2 border-terminal/20" />
-                <div className="absolute bottom-3 left-3 w-5 h-5 border-l-2 border-b-2 border-terminal/20" />
-                <div className="absolute bottom-3 right-3 w-5 h-5 border-r-2 border-b-2 border-terminal/20" />
-              </div>
-            </a>
-          ))}
-
-          {/* End spacer */}
-          <div className="w-[20vw] flex-shrink-0" />
+      )}
+      {status === 'cached' && (
+        <div className="repository-cache-note">
+          <span>Showing the last saved projects. GitHub is temporarily unavailable.</span>
+          <button type="button" onClick={retry} className="hoverable">
+            Retry
+          </button>
         </div>
-
-
-      {/* Mobile - Vertical Card List */}
-      <div className="md:hidden pt-4 pb-8 px-4">
+      )}
+      {status === 'ready' && projects.length === 0 && (
+        <p className="repository-state">No public projects to show yet.</p>
+      )}
+      <div className="repository-grid">
         {projects.map((project, index) => (
-          <a
-            key={project.id}
-            href={project.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full mb-5 border border-terminal/25 overflow-hidden active:border-terminal/60 transition-colors"
-          >
-            {/* Image */}
-            <div className="relative h-48">
-              <img
-                src={project.imageUrl}
-                alt={project.title}
-                className="w-full h-full object-cover grayscale opacity-60"
-                loading="lazy"
-                decoding="async"
-                draggable={false}
-                width={800}
-                height={480}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-void via-void/50 to-transparent pointer-events-none" />
-              <div className="absolute top-2 left-2 flex items-center gap-2">
-                <span className="font-mono text-[10px] text-terminal-dark bg-void/80 px-2 py-0.5">
-                  FILE_{String(index + 1).padStart(2, '0')}
-                </span>
-                <span className="font-mono text-[10px] text-alert bg-void/80 px-2 py-0.5">
-                  {project.category}
-                </span>
-              </div>
-            </div>
-            {/* Content */}
-            <div className="p-4 bg-void">
-              <h3 className="font-display font-bold text-terminal text-lg mb-1">
-                {project.title}
-              </h3>
-              <p className="text-terminal-dark text-xs leading-relaxed mb-3 line-clamp-2">
-                {project.description}
-              </p>
-              <span className="text-[11px] font-mono text-terminal-dark flex items-center gap-1">
-                <ExternalLink size={10} /> VIEW
-              </span>
-            </div>
-          </a>
+          <div key={project.id} className="repository-scene">
+            <article className="repository-card">
+              <a
+                href={`https://github.com/${GITHUB_USERNAME}/${encodeURIComponent(project.name)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="repository-link hoverable"
+                aria-label={`View ${project.name} on GitHub`}
+              >
+                <RepositoryVisual project={project} index={index} />
+                <div className="repository-copy">
+                  <span className="repository-index micro-label">
+                    {String(index + 1).padStart(2, '0')} /{' '}
+                    {String(projects.length).padStart(2, '0')}
+                  </span>
+                  <div className="repository-title">
+                    <h3>{project.name}</h3>
+                    <span className="micro-label muted">{project.language}</span>
+                  </div>
+                  {project.description && <p>{project.description}</p>}
+                </div>
+              </a>
+            </article>
+          </div>
         ))}
-      </div>
-      {/* Desktop Scroll hint */}
-      <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
-        <div className="w-12 h-px bg-gradient-to-r from-transparent to-terminal/40" />
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] text-terminal-dark tracking-[0.3em]">SCROLL</span>
-          <svg className="w-4 h-4 text-terminal-dark animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-        <div className="w-12 h-px bg-gradient-to-l from-transparent to-terminal/40" />
       </div>
     </section>
   );

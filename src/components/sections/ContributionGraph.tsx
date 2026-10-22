@@ -5,26 +5,33 @@
 
 import React, { useEffect, useState } from 'react';
 import { SOCIAL_LINKS } from '@/constants/data';
-
-interface ContributionDay {
-  date: string;
-  count: number;
-  level: 0 | 1 | 2 | 3 | 4;
-}
-
-interface ApiResponse {
-  contributions: ContributionDay[];
-  total: Record<string, number>;
-}
+import { requestJson } from '@/lib/request';
+import { parseContributionDays } from '@/lib/contributions';
 
 interface ContributionGraphProps {
   accentColor: string;
 }
 
-const GITHUB_USER = SOCIAL_LINKS.find((l) => l.label === 'GitHub')?.url.split('/').pop() ?? 'jedkx';
+const GITHUB_USER =
+  SOCIAL_LINKS.find((l) => l.label === 'GitHub')
+    ?.url.split('/')
+    .pop() ?? 'jedkx';
 const API_URL = `https://github-contributions-api.jogruber.de/v4/${GITHUB_USER}`;
 
-const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_ABBR = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
 const CELL = 10;
@@ -57,13 +64,11 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({ accentColo
   useEffect(() => {
     const ctrl = new AbortController();
 
-    fetch(API_URL, { signal: ctrl.signal })
-      .then((r) => {
-        if (!r.ok) throw new Error('fetch failed');
-        return r.json() as Promise<ApiResponse>;
-      })
-      .then((data) => {
-        const map = new Map<string, number>(data.contributions.map((c) => [c.date, c.level]));
+    requestJson(API_URL, ctrl.signal)
+      .then(parseContributionDays)
+      .then((contributions) => {
+        if (ctrl.signal.aborted) return;
+        const map = new Map<string, number>(contributions.map((c) => [c.date, c.level]));
 
         const today = new Date();
         const rollingStart = new Date(today);
@@ -73,7 +78,7 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({ accentColo
         const rollingStartStr = formatDate(rollingStart);
 
         setTotal(
-          data.contributions
+          contributions
             .filter((c) => c.date >= rollingStartStr && c.date <= todayStr)
             .reduce((sum, c) => sum + c.count, 0)
         );
@@ -127,13 +132,18 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({ accentColo
     const parent = graphRef.current?.parentElement;
     if (!parent) return;
 
-    window.requestAnimationFrame(() => {
+    const frame = window.requestAnimationFrame(() => {
       parent.scrollLeft = parent.scrollWidth;
     });
+    return () => window.cancelAnimationFrame(frame);
   }, [weeks]);
 
   if (loading) {
-    return <span className="text-terminal-dark/45 text-[11px] animate-pulse">syncing contributions...</span>;
+    return (
+      <span className="text-terminal-dark/45 text-[11px] animate-pulse">
+        syncing contributions...
+      </span>
+    );
   }
 
   if (error || weeks.length === 0) {
@@ -145,7 +155,10 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({ accentColo
 
   return (
     <div ref={graphRef} className="font-mono select-none min-w-[calc(28px+4px+686px)]">
-      <div className="relative mb-1" style={{ height: '12px', width: `${dayLabelWidth + 4 + gridWidth}px` }}>
+      <div
+        className="relative mb-1"
+        style={{ height: '12px', width: `${dayLabelWidth + 4 + gridWidth}px` }}
+      >
         <div style={{ position: 'absolute', left: dayLabelWidth + 4, top: 0, width: gridWidth }}>
           {monthLabels.map(({ weekIdx, label }) => (
             <span

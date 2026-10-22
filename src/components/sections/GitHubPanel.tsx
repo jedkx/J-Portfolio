@@ -6,8 +6,12 @@ import React, { useEffect, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { SOCIAL_LINKS } from '@/constants/data';
 import { ContributionGraph } from './ContributionGraph';
+import { requestJson } from '@/lib/request';
 
-const GITHUB_USER = SOCIAL_LINKS.find((l) => l.label === 'GitHub')?.url.split('/').pop() ?? 'jedkx';
+const GITHUB_USER =
+  SOCIAL_LINKS.find((l) => l.label === 'GitHub')
+    ?.url.split('/')
+    .pop() ?? 'jedkx';
 
 interface GitHubUser {
   followers: number;
@@ -20,7 +24,11 @@ interface GitHubPanelProps {
 }
 
 const PINNED_REPOS = [
-  { name: 'DxReportReview', lang: 'C#', desc: 'DevExpress reporting with git-style approve/reject flow.' },
+  {
+    name: 'DxReportReview',
+    lang: 'C#',
+    desc: 'DevExpress reporting with git-style approve/reject flow.',
+  },
   { name: 'openground', lang: 'Python', desc: 'FastAPI + WebSocket + Open MCT telemetry sandbox.' },
   { name: 'sentinel', lang: 'C++', desc: 'RPi Waveshare e-paper monitor with scrolling log.' },
   { name: 'Relay', lang: 'Go', desc: 'Webhook persister to Postgres with async retries.' },
@@ -28,14 +36,27 @@ const PINNED_REPOS = [
 
 export const GitHubPanel: React.FC<GitHubPanelProps> = ({ accentColor }) => {
   const [user, setUser] = useState<GitHubUser | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const ctrl = new AbortController();
 
-    fetch(`https://api.github.com/users/${GITHUB_USER}`, { signal: ctrl.signal })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => setUser({ followers: d.followers, following: d.following, public_repos: d.public_repos }))
-      .catch(() => {});
+    requestJson(`https://api.github.com/users/${GITHUB_USER}`, ctrl.signal)
+      .then((value) => {
+        const data = value as GitHubUser | null;
+        if (
+          !data ||
+          ![data.followers, data.following, data.public_repos].every(
+            (item) => typeof item === 'number' && Number.isSafeInteger(item) && item >= 0
+          )
+        )
+          throw new Error('Invalid GitHub profile');
+        if (!ctrl.signal.aborted) setUser(data);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === 'AbortError') return;
+        setFailed(true);
+      });
 
     return () => ctrl.abort();
   }, []);
@@ -56,7 +77,9 @@ export const GitHubPanel: React.FC<GitHubPanelProps> = ({ accentColor }) => {
             <span className="text-terminal-dark">{user.public_repos} public repos</span>
           </>
         ) : (
-          <span className="text-terminal-dark/40 animate-pulse">fetching profile...</span>
+          <span className="text-terminal-dark" role="status">
+            {failed ? 'profile offline · repositories below' : 'fetching profile...'}
+          </span>
         )}
         <a
           href={`https://github.com/${GITHUB_USER}`}
@@ -86,12 +109,14 @@ export const GitHubPanel: React.FC<GitHubPanelProps> = ({ accentColor }) => {
               <span className="text-[13px] md:text-sm" style={{ color: accentColor }}>
                 &gt;
               </span>
-              <span className="text-terminal font-bold text-sm md:text-base">
-                {repo.name}
+              <span className="text-terminal font-bold text-sm md:text-base">{repo.name}</span>
+              <span className="text-terminal-dark/55 text-[11px] md:text-xs ml-auto tracking-[0.2em] uppercase">
+                {repo.lang}
               </span>
-              <span className="text-terminal-dark/55 text-[11px] md:text-xs ml-auto tracking-[0.2em] uppercase">{repo.lang}</span>
             </div>
-            <div className="text-terminal-dark/75 text-[12px] md:text-[13px] mt-1 leading-relaxed">{repo.desc}</div>
+            <div className="text-terminal-dark/75 text-[12px] md:text-[13px] mt-1 leading-relaxed">
+              {repo.desc}
+            </div>
           </a>
         ))}
       </div>

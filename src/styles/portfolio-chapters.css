@@ -1,0 +1,207 @@
+/* Hero and About follow document flow; only the repository gallery is sticky. */
+#hero.portfolio-landing {
+  height: 100svh;
+  position: relative;
+  background: #050505;
+}
+#hero.portfolio-landing > .experience-stage {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+#hero.portfolio-landing .experience-name {
+  top: 0;
+}
+.about-chapter {
+  padding-block: 32px 64px;
+  background: #080808;
+}
+.chapter-register {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-block: 20px;
+  border-top: 1px solid #ffffff26;
+  font: 10px var(--font-tech);
+  color: #aaa;
+  letter-spacing: 0.05em;
+}
+.about-terminal {
+  border: 1px solid #ffffff26;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #0a0a0c;
+}
+.about-terminal > .window-chrome {
+  position: relative;
+  inset: auto;
+  height: 42px;
+  padding-inline: 20px;
+}
+.about-terminal .experience-profile {
+  position: relative;
+  inset: auto;
+  overflow: visible;
+  min-height: 0;
+  opacity: 1;
+  visibility: visible;
+}
+.about-terminal .neofetch-shell.terminal-original {
+  min-height: 0;
+  max-width: none;
+}
+.project-gallery.portfolio-experience {
+  height: calc(100svh - 82px + var(--project-steps) * clamp(180px, 28svh, 320px));
+  background: #090909;
+}
+.project-gallery > .experience-stage {
+  top: 82px;
+  height: calc(100svh - 82px);
+  min-height: 0;
+  perspective: none;
+}
+.project-gallery .experience-window {
+  inset: 0;
+  transform: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #090909;
+}
+.project-gallery .work-kicker {
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #ffffff26;
+  z-index: 3;
+  pointer-events: none;
+}
+.project-gallery:not(.experience-static) .work-viewport {
+  inset: 44px 0 80px;
+}
+.project-gallery .work-panel {
+  background: #090909;
+}
+.project-gallery:not(.experience-static) .work-panel:not(.is-inspecting) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 5%;
+  padding: 20px 5%;
+}
+.project-gallery .work-panel:not(.is-inspecting) .repository-visual {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #111;
+  border: 1px solid #ffffff14;
+}
+.project-gallery .work-panel:not(.is-inspecting) .repository-visual-inner {
+  inset: 0;
+}
+.project-gallery .work-panel:not(.is-inspecting) .work-copy {
+  position: relative;
+  inset: auto;
+  align-self: center;
+  margin: 0;
+}
+.project-gallery .work-copy h2 {
+  font-size: clamp(28px, 3.8vw, 62px);
+  max-width: 100%;
+}
+.project-gallery .work-description {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+.project-gallery .work-description p {
+  font-size: 14px;
+  line-height: 1.65;
+}
+.project-gallery .inspect-preview {
+  top: 32px;
+  left: calc(5% + 12px);
+  right: auto;
+}
+.project-gallery .work-controls {
+  left: 5%;
+  right: 5%;
+  bottom: 16px;
+  height: 48px;
+}
+.project-gallery.experience-static {
+  height: auto;
+}
+.project-gallery.experience-static > .experience-stage {
+  position: relative;
+  inset: auto;
+  height: auto;
+  overflow: visible;
+}
+.project-gallery.experience-static .experience-window {
+  position: relative;
+  inset: auto;
+}
+.project-gallery.experience-static .work-kicker {
+  position: relative;
+  inset: auto;
+  margin-inline: 5%;
+}
+.project-gallery.experience-static .work-panel {
+  height: auto;
+  min-height: 0;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 0;
+  border-bottom: 1px solid #ffffff20;
+}
+.project-gallery.experience-static .repository-visual {
+  height: 300px;
+}
+@media (max-width: 767px) {
+  .about-chapter {
+    padding: 20px 16px 36px;
+  }
+  .chapter-register {
+    font-size: 9px;
+    gap: 8px;
+  }
+  .project-gallery:not(.experience-static) .work-panel:not(.is-inspecting) {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 5%;
+    gap: 20px;
+    overflow-y: auto;
+  }
+  .project-gallery .work-panel:not(.is-inspecting) .repository-visual {
+    height: clamp(150px, 29svh, 260px);
+    flex-shrink: 0;
+  }
+  .project-gallery .work-panel:not(.is-inspecting) .work-copy {
+    align-self: stretch;
+  }
+  .project-gallery .work-copy h2 {
+    font-size: clamp(26px, 8vw, 40px);
+  }
+  .project-gallery .work-description {
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .project-gallery .work-description p {
+    font-size: 13px;
+  }
+  .project-gallery .inspect-preview {
+    top: 24px;
+  }
+  .project-gallery.experience-static .work-panel {
+    grid-template-columns: 1fr;
+  }
+}

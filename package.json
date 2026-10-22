@@ -2,8 +2,12 @@
   "name": "nostromo-portfolio",
   "version": "2.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "description": "NOSTROMO - Professional Portfolio with React, GSAP & Tailwind CSS",
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
@@ -26,16 +30,16 @@
     "@types/node": "^20.11.19",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^7.0.2",
-    "@typescript-eslint/parser": "^7.0.2",
-    "@vitejs/plugin-react": "^5.1.3",
+    "@typescript-eslint/eslint-plugin": "^8.72.0",
+    "@typescript-eslint/parser": "^8.72.0",
+    "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
-    "postcss": "^8.4.35",
+    "postcss": "^8.5.31",
     "prettier": "^3.2.5",
     "tailwindcss": "^3.4.1",
     "terser": "^5.46.0",
     "typescript": "^5.3.3",
-    "vite": "^5.1.3"
+    "vite": "^7.3.7"
   }
 }

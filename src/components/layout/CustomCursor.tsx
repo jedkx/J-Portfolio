@@ -9,8 +9,6 @@ import { usePrefersReducedMotion } from '@/hooks';
 export const CustomCursor: React.FC = () => {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const trailRefs = useRef<Array<{ x: number; y: number; scale: number }>>([]);
-  const trailElements = useRef<HTMLDivElement[]>([]);
   const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
@@ -26,17 +24,23 @@ export const CustomCursor: React.FC = () => {
     let ringX = 0;
     let ringY = 0;
     let animationId: number;
-
-    // Initialize trail points
-    const trailCount = 8;
-    trailRefs.current = [];
-    for (let i = 0; i < trailCount; i++) {
-      trailRefs.current.push({ x: 0, y: 0, scale: 1 - i * 0.12 });
-    }
+    let keyHovered = false;
+    let hoveredTarget: EventTarget | null = null;
+    const updateKeyHover = (target: EventTarget | null) => {
+      hoveredTarget = target;
+      const next =
+        document.body.dataset.secretWordHover === 'true' ||
+        (target instanceof Element && !!target.closest('[data-key-cursor="true"]'));
+      if (next !== keyHovered) {
+        keyHovered = next;
+        document.body.classList.toggle('key-hover', next);
+      }
+    };
 
     const onMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+      updateKeyHover(e.target);
 
       // Dot follows immediately
       gsap.set(dot, {
@@ -55,28 +59,13 @@ export const CustomCursor: React.FC = () => {
         y: ringY,
       });
 
-      // Animate trail
-      trailRefs.current.forEach((point, i) => {
-        const leader = i === 0 ? { x: mouseX, y: mouseY } : trailRefs.current[i - 1];
-        point.x += (leader.x - point.x) * (0.2 - i * 0.02);
-        point.y += (leader.y - point.y) * (0.2 - i * 0.02);
-
-        if (trailElements.current[i]) {
-          gsap.set(trailElements.current[i], {
-            x: point.x,
-            y: point.y,
-            scale: point.scale,
-          });
-        }
-      });
-
       animationId = requestAnimationFrame(animateRing);
     };
 
     const onMouseEnterHoverable = () => {
       document.body.classList.add('hovering');
       gsap.to(ring, {
-        scale: 2,
+        scale: 1.25,
         opacity: 0.5,
         duration: 0.3,
         ease: 'power2.out',
@@ -137,10 +126,12 @@ export const CustomCursor: React.FC = () => {
     const HOVERABLE_SELECTOR = 'a, button, [role="button"], .hoverable, input, textarea';
 
     const onMouseOver = (e: MouseEvent) => {
+      updateKeyHover(e.target);
       if ((e.target as Element).closest(HOVERABLE_SELECTOR)) onMouseEnterHoverable();
     };
 
     const onMouseOut = (e: MouseEvent) => {
+      updateKeyHover(e.relatedTarget);
       const target = (e.target as Element).closest(HOVERABLE_SELECTOR);
       if (target) {
         const related = e.relatedTarget as Element | null;
@@ -150,9 +141,18 @@ export const CustomCursor: React.FC = () => {
 
     document.body.addEventListener('mouseover', onMouseOver);
     document.body.addEventListener('mouseout', onMouseOut);
+    const keyObserver = new MutationObserver(() => updateKeyHover(hoveredTarget));
+    keyObserver.observe(document.body, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['data-key-cursor', 'data-secret-word-hover'],
+    });
 
     return () => {
       cancelAnimationFrame(animationId);
+      keyObserver.disconnect();
+      gsap.killTweensOf([dot, ring]);
+      document.body.classList.remove('hovering', 'holding', 'key-hover');
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
@@ -167,26 +167,9 @@ export const CustomCursor: React.FC = () => {
 
   return (
     <>
-      {/* Cursor Trail */}
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={i}
-          ref={(el) => {
-            if (el) trailElements.current[i] = el;
-          }}
-          className="cursor-trail"
-          style={{
-            opacity: 0.15 - i * 0.018,
-            width: `${6 - i * 0.5}px`,
-            height: `${6 - i * 0.5}px`,
-          }}
-          aria-hidden="true"
-        />
-      ))}
-
       {/* Cursor Dot */}
       <div ref={dotRef} className="cursor-dot" aria-hidden="true" />
-      
+
       {/* Cursor Ring */}
       <div ref={ringRef} className="cursor-ring" aria-hidden="true" />
     </>

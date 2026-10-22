@@ -1,0 +1,24 @@
+/* Five navigation items must fit short and narrow screens as well as desktop. */
+#mobile-menu {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#mobile-menu nav {
+  height: auto;
+  min-height: 100%;
+  padding-block: 96px 40px;
+  gap: clamp(12px, 2.2svh, 18px);
+}
+#mobile-menu nav > a {
+  font-size: clamp(28px, 8.5vw, 58px);
+  overflow-wrap: anywhere;
+  flex-shrink: 0;
+}
+#mobile-menu nav > div {
+  flex-shrink: 0;
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .signal-nav ul {
+    gap: 18px;
+  }
+}

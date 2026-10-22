@@ -1,113 +1,242 @@
-// ============================================
-// LOADING SCREEN - DARK MATTER BOOT
-// ============================================
-
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { usePrefersReducedMotion } from '@/hooks';
-
-interface LoadingScreenProps {
-  onComplete: () => void;
-}
+import { HiddenResident } from '@/components/game/HiddenResident';
 
 const BOOT_LINES = [
   '> INITIALIZING VOID PROTOCOL...',
   '> ESTABLISHING NEURAL LINK...',
+  '> RESTORING DISPLAY BUFFER...',
   '> LOADING SYSTEM CORE...',
   '> CALIBRATING SENSORS...',
   '> SYSTEM READY.',
 ];
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+// The percentage represents this staged boot sequence, not a network transfer.
+export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const root = useRef<HTMLDivElement>(null);
+  const percent = useRef<HTMLSpanElement>(null);
+  const bar = useRef<HTMLSpanElement>(null);
+  const [eating, setEating] = useState(false);
+  const [anticipating, setAnticipating] = useState(false);
+  const [residentAwake, setResidentAwake] = useState(false);
   const [currentLine, setCurrentLine] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setCurrentLine(BOOT_LINES.length);
-      setProgress(100);
-      const timeout = setTimeout(onComplete, 200);
-      return () => clearTimeout(timeout);
-    }
-
-    const tl = gsap.timeline();
-
-    // Show boot lines one by one (slower)
-    BOOT_LINES.forEach((_, index) => {
-      tl.call(() => setCurrentLine(index + 1), [], index * 0.6);
-    });
-
-    // Progress counter (slower)
-    tl.to(
-      {},
-      {
-        duration: 3.0,
-        onUpdate: function () {
-          setProgress(Math.round(this.progress() * 100));
-        },
-      },
-      0
-    );
-
-    // Hold on 100% for a moment
-    tl.to({}, { duration: 0.8 });
-
-    // Fade out
-    tl.to(
-      containerRef.current,
-      {
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power2.inOut',
-        onComplete,
+  const reduced = usePrefersReducedMotion();
+  useLayoutEffect(() => {
+    let live = true,
+      started = false;
+    let context: gsap.Context | undefined;
+    const prints: HTMLElement[] = [];
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const start = () => {
+      if (!live || started) return;
+      started = true;
+      if (reduced) {
+        onComplete();
+        return;
       }
-    );
-
-    return () => {
-      tl.kill();
+      context = gsap.context(() => {
+        const letter = root.current!.querySelector<HTMLElement>('.boot-letter-d')!;
+        const ghost = root.current!.querySelector<HTMLElement>('.boot-ghost-d')!;
+        const mouth = root.current!.querySelector<HTMLElement>('.resident-mouth')!;
+        const copy = root.current!.querySelector<HTMLElement>('.site-boot-copy')!;
+        let printedLetter = letter;
+        const printSurface = () => {
+          const rect = copy.getBoundingClientRect();
+          root.current!.querySelectorAll<HTMLElement>('.boot-page').forEach((panel) => {
+            const print = copy.cloneNode(true) as HTMLElement;
+            print.classList.replace('site-boot-copy', 'boot-print');
+            print.setAttribute('aria-hidden', 'true');
+            Object.assign(print.style, {
+              position: 'absolute',
+              top: `${rect.top}px`,
+              left: `${rect.left}px`,
+              width: `${rect.width}px`,
+              margin: '0',
+              opacity: '1',
+              visibility: 'visible',
+              transform: 'none',
+            });
+            panel.appendChild(print);
+            prints.push(print);
+          });
+          printedLetter =
+            prints[
+              letter.getBoundingClientRect().top < innerHeight / 2 ? 0 : 1
+            ].querySelector<HTMLElement>('.boot-letter-d')!;
+        };
+        const boot = { value: 0 };
+        const updateBoot = () => {
+          if (percent.current) percent.current.textContent = Math.round(boot.value) + '%';
+          if (bar.current) bar.current.style.transform = `scaleX(${boot.value / 100})`;
+          // The split surfaces contain visual copies; advance those as well.
+          root.current
+            ?.querySelectorAll<HTMLElement>('.boot-print .boot-progress > span')
+            .forEach((node) => {
+              node.textContent = Math.round(boot.value) + '%';
+            });
+          root.current
+            ?.querySelectorAll<HTMLElement>('.boot-print .site-boot-track > span')
+            .forEach((node) => {
+              node.style.transform = `scaleX(${boot.value / 100})`;
+            });
+        };
+        const sequence = gsap.timeline({ onComplete });
+        sequence
+          .from('.site-boot-copy', { opacity: 0, y: 12, duration: 0.5, ease: 'power3.out' })
+          .call(() => setCurrentLine(1), [], 0)
+          .call(() => setCurrentLine(2), [], 0.85)
+          .to(boot, { value: 100, duration: 8.2, ease: 'none', onUpdate: updateBoot }, 0)
+          .call(printSurface, [], 1.48)
+          .set(copy, { autoAlpha: 0 }, 1.5)
+          .set(root.current, { attr: { 'data-rift-state': 'open' } }, 1.5)
+          .to(
+            '.boot-page-top',
+            { yPercent: -24, rotation: 0, duration: 1.1, ease: 'power3.inOut' },
+            1.5
+          )
+          .to(
+            '.boot-page-bottom',
+            { yPercent: 24, rotation: 0, duration: 1.1, ease: 'power3.inOut' },
+            1.5
+          )
+          .from(
+            '.boot-backstage .hidden-resident',
+            { opacity: 0, duration: 0.35, ease: 'sine.out' },
+            1.9
+          )
+          .call(() => setResidentAwake(true), [], 2.6)
+          .call(() => setAnticipating(true), [], 3.4)
+          .call(
+            () => {
+              setAnticipating(false);
+              setEating(true);
+            },
+            [],
+            4.4
+          )
+          .call(
+            () => {
+              root
+                .current!.querySelectorAll('.boot-letter-d')
+                .forEach((node) => gsap.set(node, { opacity: 0 }));
+            },
+            [],
+            3.75
+          )
+          .fromTo(
+            ghost,
+            {
+              x: () => printedLetter.getBoundingClientRect().left,
+              y: () => printedLetter.getBoundingClientRect().top,
+              fontSize: () => getComputedStyle(printedLetter).fontSize,
+              fontFamily: () => getComputedStyle(printedLetter).fontFamily,
+              fontWeight: () => getComputedStyle(printedLetter).fontWeight,
+              autoAlpha: 1,
+              scale: 1,
+              rotation: 0,
+              xPercent: 0,
+              yPercent: 0,
+            },
+            {
+              x: () => {
+                const rect = mouth.getBoundingClientRect();
+                return rect.left + rect.width / 2;
+              },
+              y: () => {
+                const rect = mouth.getBoundingClientRect();
+                return rect.top + rect.height / 2;
+              },
+              xPercent: -50,
+              yPercent: -50,
+              scale: 0.55,
+              rotation: 0,
+              duration: 0.65,
+              ease: 'power2.inOut',
+              immediateRender: false,
+            },
+            3.75
+          )
+          .to(ghost, { scale: 0.025, autoAlpha: 0, duration: 0.12, ease: 'power2.in' }, 4.4)
+          .call(() => setEating(false), [], 4.7)
+          .to(
+            '.boot-page-top',
+            { yPercent: 0, rotation: 0, duration: 0.65, ease: 'power3.inOut' },
+            5.4
+          )
+          .to(
+            '.boot-page-bottom',
+            { yPercent: 0, rotation: 0, duration: 0.65, ease: 'power3.inOut' },
+            5.4
+          )
+          .set('.boot-page', { clearProps: 'transform' }, 6.05)
+          .set(root.current, { attr: { 'data-rift-state': 'closed' } }, 6.05)
+          .set(copy, { autoAlpha: 1 }, 6.05)
+          .call(() => prints.forEach((print) => print.remove()), [], 6.06)
+          .call(() => setCurrentLine(3), [], 6.05)
+          .call(() => setCurrentLine(4), [], 6.55)
+          .call(() => setCurrentLine(5), [], 7.2)
+          .call(() => setCurrentLine(6), [], 8.2)
+          .to(root.current, { opacity: 0, duration: 1.1, ease: 'sine.inOut' }, 8.65);
+      }, root);
     };
-  }, [onComplete, prefersReducedMotion]);
-
+    const fallback = window.setTimeout(start, 1100);
+    void document.fonts.ready.then(start);
+    return () => {
+      live = false;
+      window.clearTimeout(fallback);
+      context?.revert();
+      prints.forEach((print) => print.remove());
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onComplete, reduced]);
   return (
     <div
-      ref={containerRef}
-      className="fixed inset-0 z-[200] bg-void flex items-center justify-center"
+      ref={root}
+      className="site-boot boot-theatre boot-restored"
+      data-rift-state="closed"
+      role="status"
+      aria-label="Portfolio boot sequence"
     >
-      <div className="text-center">
-        {/* Logo */}
-        <div className="text-terminal text-4xl md:text-5xl font-display font-black tracking-tighter mb-10 animate-pulse">
-          HELLO <span className="text-alert">FRIEND</span>
-        </div>
-
-        {/* Boot Lines */}
-        <div className="text-center font-mono text-xs space-y-1 mb-8 min-h-[120px]">
+      <div className="boot-backstage" aria-hidden="true">
+        <HiddenResident cameo awake={residentAwake} eating={eating} anticipating={anticipating} />
+      </div>
+      <div className="boot-page boot-page-top" aria-hidden="true" />
+      <div className="boot-page boot-page-bottom" aria-hidden="true" />
+      <div className="site-boot-copy">
+        <span className="site-boot-label">DARK MATTER / BOOT SEQUENCE</span>
+        <h1 aria-label="Hello friend">
+          HELLO{' '}
+          <span>
+            FRIEN<span className="boot-letter-d">D</span>
+          </span>
+        </h1>
+        <div className="boot-lines" aria-hidden="true">
           {BOOT_LINES.map((line, index) => (
             <div
-              key={index}
-              className={`transition-all duration-300 ${
-                index < currentLine
-                  ? 'opacity-100 text-terminal-muted'
-                  : 'opacity-0'
-              } ${index === currentLine - 1 ? 'text-terminal' : ''}`}
+              className={
+                index < currentLine ? (index === currentLine - 1 ? 'is-current' : 'is-visible') : ''
+              }
+              key={line}
             >
               {line}
             </div>
           ))}
         </div>
-
-        {/* Progress */}
-        <div className="flex items-center justify-center gap-4 font-mono text-xs text-terminal-muted">
-          <div className="w-32 h-px bg-terminal-dark relative overflow-hidden">
-            <div
-              className="absolute inset-y-0 left-0 bg-terminal transition-all duration-100"
-              style={{ width: `${progress}%` }}
-            />
+        <div className="boot-progress" aria-hidden="true">
+          <div className="site-boot-track">
+            <span ref={bar} />
           </div>
-          <span>{progress}%</span>
+          <span ref={percent}>0%</span>
         </div>
       </div>
+      <span className="boot-ghost-d" aria-hidden="true">
+        D
+      </span>
+      <button type="button" className="site-boot-skip hoverable" onClick={onComplete}>
+        SKIP INTRO ↗
+      </button>
     </div>
   );
 };

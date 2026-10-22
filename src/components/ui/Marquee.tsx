@@ -1,59 +1,86 @@
-// ============================================
-// MARQUEE COMPONENT - Scrolling Text
-// ============================================
-
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { usePrefersReducedMotion } from '@/hooks';
+import '@/styles/reference-ribbon.css';
 
+interface ReferenceItem {
+  text: string;
+  reference?: string;
+  href?: string;
+  title?: string;
+  color?: string;
+  gradient?: string;
+  textShadow?: string;
+  font?: string;
+  fontWeight?: string;
+  letterSpacing?: string;
+  fontSize?: string;
+}
 interface MarqueeProps {
-  items: Array<string | { text: string; color?: string; gradient?: string; textShadow?: string; font?: string; fontWeight?: string; letterSpacing?: string; fontSize?: string }>;
+  items: Array<string | ReferenceItem>;
   reverse?: boolean;
   className?: string;
 }
-
-export const Marquee: React.FC<MarqueeProps> = ({
-  items,
-  reverse = false,
-  className,
-}) => {
-  // Duplicate items 2x for seamless loop
-  const duplicatedItems = [...items, ...items];
+export const Marquee: React.FC<MarqueeProps> = ({ items, reverse = false, className }) => {
+  const root = useRef<HTMLDivElement>(null);
+  const [fontReady, setFontReady] = useState(false);
+  const reduced = usePrefersReducedMotion();
+  useEffect(() => {
+    let live = true;
+    document.fonts.ready.then(() => {
+      if (live) setFontReady(true);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (reduced || !root.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) =>
+          entry.target.classList.toggle('is-arriving', entry.isIntersecting)
+        );
+      },
+      { root: root.current, threshold: 0.8 }
+    );
+    root.current
+      .querySelectorAll('[data-reference="hacker"]')
+      .forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [items, reduced]);
 
   return (
-    <div className={cn('marquee-wrapper', reverse && 'marquee-reverse', className)}>
-      <div className="marquee-inner">
-        {duplicatedItems.map((item, index) => {
-          const text = typeof item === 'string' ? item : item.text;
-          const color = typeof item === 'string' ? undefined : item.color;
-          const gradient = typeof item === 'string' ? undefined : item.gradient;
-          const textShadow = typeof item === 'string' ? undefined : item.textShadow;
-          const font = typeof item === 'string' ? undefined : item.font;
-          const fontWeight = typeof item === 'string' ? undefined : item.fontWeight;
-          const letterSpacing = typeof item === 'string' ? undefined : item.letterSpacing;
-          const fontSize = typeof item === 'string' ? undefined : item.fontSize;
-          
-          return (
-            <span 
-              key={index} 
-              className="marquee-item"
-              style={{
-                ...(gradient ? {
-                  background: gradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                } : color ? { color } : {}),
-                ...(textShadow && { textShadow }),
-                ...(font && { fontFamily: font }),
-                ...(fontWeight && { fontWeight }),
-                ...(letterSpacing && { letterSpacing }),
-                ...(fontSize && { fontSize })
-              }}
-            >
-              {text}
-            </span>
-          );
-        })}
+    <div ref={root} className={cn('reference-ribbon', reverse && 'reference-reverse', className)}>
+      <div
+        className="reference-track"
+        style={{ animationPlayState: !fontReady ? 'paused' : 'running' }}
+      >
+        {[0, 1].map((copy) => (
+          <div className="reference-group" key={copy} aria-hidden={copy === 1 ? true : undefined}>
+            {items.map((raw, index) => {
+              const item: ReferenceItem = typeof raw === 'string' ? { text: raw } : raw;
+              const style: React.CSSProperties = {
+                color: item.color,
+                fontFamily: item.font,
+                fontWeight: item.fontWeight,
+                letterSpacing: item.letterSpacing,
+                fontSize: item.fontSize,
+                textShadow: item.textShadow,
+              };
+              return (
+                <span
+                  className="reference-item"
+                  data-reference={item.reference}
+                  key={index}
+                  style={style}
+                >
+                  <span className="reference-quote">{item.text}</span>
+                </span>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

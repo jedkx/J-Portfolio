@@ -2,36 +2,48 @@
 // APP COMPONENT - DARK MATTER
 // ============================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 
-import {
-  Navigation,
-  CustomCursor,
-  HeroSection,
-  AboutSection,
-  ProjectsSection,
-  FooterSection,
-  ErrorBoundary,
-} from '@/components';
+import { Navigation } from '@/components/layout/Navigation';
+import { CustomCursor } from '@/components/layout/CustomCursor';
+import { FooterSection } from '@/components/sections/FooterSection';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AtmosphereOverlays } from '@/components/layout/AtmosphereOverlays';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
+import { PortfolioExperience } from '@/components/sections/PortfolioExperience';
 import { initMagneticEffect } from '@/utils/magneticEffect';
-import { initTextReveal } from '@/utils/textReveal';
 import { usePrefersReducedMotion } from '@/hooks';
+import { SecretGameProvider } from '@/components/game/SecretGame';
+import { SecretArchive } from '@/components/game/SecretArchive';
+import { SiteBottom } from '@/components/layout/SiteBottom';
+import { Marquee } from '@/components/ui/Marquee';
+import { MANIFESTO_ITEMS } from '@/constants/data';
+import { NAV_OFFSET } from '@/features/portfolio/scene';
 
 // Register GSAP plugins
-gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+gsap.registerPlugin(ScrollTrigger);
 
 const DEFAULT_ACCENT = '#ff5555';
+const isReload =
+  (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)
+    ?.type === 'reload';
+if (isReload) {
+  history.scrollRestoration = 'manual';
+  history.replaceState(history.state, '', `${location.pathname}${location.search}#hero`);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
 
 const hexToRgb = (hex: string): string => {
   const normalized = hex.replace('#', '');
-  const value = normalized.length === 3
-    ? normalized.split('').map((char) => char + char).join('')
-    : normalized;
+  const value =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : normalized;
 
   const r = Number.parseInt(value.slice(0, 2), 16);
   const g = Number.parseInt(value.slice(2, 4), 16);
@@ -45,7 +57,12 @@ const App: React.FC = () => {
   const [enableCustomCursor, setEnableCustomCursor] = useState(false);
   const [accentColor, setAccentColor] = useState(() => {
     if (typeof window === 'undefined') return DEFAULT_ACCENT;
-    return window.localStorage.getItem('theme-accent') ?? DEFAULT_ACCENT;
+    try {
+      const saved = window.localStorage.getItem('theme-accent');
+      return saved && /^#[0-9a-f]{6}$/i.test(saved) ? saved : DEFAULT_ACCENT;
+    } catch {
+      return DEFAULT_ACCENT;
+    }
   });
   const prefersReducedMotion = usePrefersReducedMotion();
 
@@ -70,7 +87,6 @@ const App: React.FC = () => {
     desktopQuery.addEventListener('change', updateCursorState);
     pointerQuery.addEventListener('change', updateCursorState);
 
-
     // Smooth scroll behavior with performance optimizations
     ScrollTrigger.defaults({
       toggleActions: 'play none none reverse',
@@ -81,19 +97,17 @@ const App: React.FC = () => {
       syncInterval: 150,
     });
 
-    // Initialize magnetic effect after content loads
-    if (!isLoading && !prefersReducedMotion) {
-      setTimeout(() => {
-        initMagneticEffect();
-        initTextReveal();
-      }, 100);
-    }
-
     return () => {
       desktopQuery.removeEventListener('change', updateCursorState);
       pointerQuery.removeEventListener('change', updateCursorState);
       document.body.classList.remove('cursor-hidden');
     };
+  }, [prefersReducedMotion]);
+
+  useEffect(() => {
+    if (isLoading || prefersReducedMotion) return;
+    const disposeMagnetic = initMagneticEffect();
+    return disposeMagnetic;
   }, [isLoading, prefersReducedMotion]);
 
   useEffect(() => {
@@ -101,45 +115,83 @@ const App: React.FC = () => {
     root.style.setProperty('--theme-accent', accentColor);
     root.style.setProperty('--theme-accent-rgb', hexToRgb(accentColor));
     root.style.setProperty('--color-alert', accentColor);
-    window.localStorage.setItem('theme-accent', accentColor);
+    try {
+      window.localStorage.setItem('theme-accent', accentColor);
+    } catch {
+      // The live theme remains usable when persistent storage is unavailable.
+    }
   }, [accentColor]);
 
-  const handleLoadingComplete = () => {
+  const handleLoadingComplete = useCallback(() => {
     setIsLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isLoading || !window.location.hash) return;
+    // The initial document loads before React creates chapter anchors. Apply
+    // deep links once the boot overlay has released scrolling.
+    const frame = requestAnimationFrame(() => {
+      let id: string;
+      try {
+        id = decodeURIComponent(window.location.hash.slice(1));
+      } catch {
+        return;
+      }
+      const target = document.getElementById(id);
+      if (!target) return;
+      window.scrollTo({
+        top: Math.max(
+          0,
+          window.scrollY + target.getBoundingClientRect().top - (id === 'hero' ? 0 : NAV_OFFSET)
+        ),
+        behavior: 'instant',
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isLoading]);
 
   return (
     <ErrorBoundary>
-      <div className="bg-void min-h-screen">
-        <a href="#main-content" className="skip-link">
-          Skip to content
-        </a>
+      <SecretGameProvider>
+        <div className="bg-void min-h-screen">
+          <a href="#main-content" className="skip-link">
+            Skip to content
+          </a>
 
-        {/* Loading Screen */}
-        {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
+          {/* Loading Screen */}
+          {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
 
-        {/* Custom Cursor */}
-        {enableCustomCursor && <CustomCursor />}
+          {/* Custom Cursor */}
+          {enableCustomCursor && <CustomCursor />}
 
-        {/* Atmosphere Overlays */}
-        <AtmosphereOverlays />
+          {/* Atmosphere Overlays */}
+          <AtmosphereOverlays />
 
-        {/* Main Content */}
-        <div className="relative">
-          {/* Navigation */}
-          <Navigation accentColor={accentColor} onAccentChange={setAccentColor} />
+          {/* Main Content */}
+          <div
+            className="relative"
+            data-secret-surface
+            inert={isLoading}
+            aria-hidden={isLoading ? true : undefined}
+          >
+            {/* Navigation */}
+            <Navigation accentColor={accentColor} onAccentChange={setAccentColor} />
 
-          {/* Main Sections */}
-          <main id="main-content">
-            <HeroSection />
-            <AboutSection accentColor={accentColor} />
-            <ProjectsSection />
-          </main>
+            {/* Main Sections */}
+            <main id="main-content">
+              <PortfolioExperience accentColor={accentColor} />
+            </main>
 
-          {/* Footer */}
-          <FooterSection />
+            {/* Footer */}
+            <Marquee items={MANIFESTO_ITEMS} />
+            <FooterSection />
+            <div className="resident-chapter">
+              <SecretArchive />
+            </div>
+            <SiteBottom />
+          </div>
         </div>
-      </div>
+      </SecretGameProvider>
     </ErrorBoundary>
   );
 };

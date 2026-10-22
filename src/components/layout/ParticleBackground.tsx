@@ -1,349 +1,364 @@
-// ============================================
-// PARTICLE BACKGROUND - LIVING STARS
-// Hold to attract, release to explode
-// Stars are born and die
-// ============================================
-
 import React, { useEffect, useRef } from 'react';
-import { secureRandomCentered, secureRandomRange } from '@/lib/random';
+import { usePrefersReducedMotion } from '@/hooks';
+import { particleCharge, particleColor } from '@/lib/particleColor';
 
-interface Particle {
+interface Star {
   x: number;
   y: number;
   vx: number;
   vy: number;
   size: number;
-  opacity: number;
-  maxOpacity: number;
-  life: number;
-  maxLife: number;
-  dying: boolean;
+  depth: number;
+  phase: number;
+  alpha: number;
+  heat: number;
+  energy: number;
+  fade: number;
 }
-
-interface MouseState {
+interface Wave {
   x: number;
   y: number;
-  holding: boolean;
-  wasHolding: boolean;
-  holdStartTime: number;
-  chargeLevel: number;
+  radius: number;
+  life: number;
+  power: number;
 }
+const random = (min: number, max: number) => min + Math.random() * (max - min);
 
+// Linear-cost physics; no pairwise particle loops or React state per frame.
 export const ParticleBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<Particle[]>([]);
-  const mouseRef = useRef<MouseState>({
-    x: -1000,
-    y: -1000,
-    holding: false,
-    wasHolding: false,
-    holdStartTime: 0,
-    chargeLevel: 0,
-  });
-  const animationRef = useRef<number | undefined>(undefined);
-
+  const reduced = usePrefersReducedMotion();
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const MAX_PARTICLES = 80;
-    const MAX_CHARGE_TIME = 10; // seconds
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    const stage = canvas.parentElement!;
+    const stars: Star[] = [],
+      waves: Wave[] = [];
+    const pointer = { x: -10000, y: -10000, vx: 0, vy: 0, down: false, start: 0, charge: 0 };
+    let width = 0,
+      height = 0,
+      frame = 0,
+      last = performance.now(),
+      visible = true;
+    let accentRgb = [255, 85, 85];
+    let temperatures: number[][] = [];
+    const temperatureColor = (heat: number, energy = 1) =>
+      particleColor(temperatures, heat, energy);
+    const playing = () => !reduced && stage.dataset.playgroundActive !== 'false';
+    const syncAccent = () => {
+      const hex = getComputedStyle(document.documentElement)
+        .getPropertyValue('--theme-accent')
+        .trim();
+      if (/^#[a-f\d]{6}$/i.test(hex)) {
+        accentRgb = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+      }
+      const stops = [accentRgb, [255, 145, 45], [255, 60, 40], [255, 250, 240], [120, 190, 255]];
+      temperatures = Array.from({ length: 65 }, (_, step) => {
+        const progress = (step / 64) * 4,
+          segment = Math.min(3, Math.floor(progress));
+        return stops[segment].map((channel, index) =>
+          Math.round(channel + (stops[segment + 1][index] - channel) * (progress - segment))
+        );
+      });
     };
-
-    // Create a new star
-    const birthStar = (x?: number, y?: number): Particle => {
-      const maxLife = secureRandomRange(3000, 8000);
+    const makeStar = (): Star => {
+      const depth = random(0.25, 1);
+      const radius = Math.sqrt(Math.random()) * Math.max(width, height) * 0.48;
+      const angle = radius * 0.018 + (Math.random() < 0.5 ? 0 : Math.PI) + random(-0.45, 0.45);
+      const clustered = Math.random() < 0.65;
       return {
-        x: x ?? secureRandomRange(0, canvas.width),
-        y: y ?? secureRandomRange(0, canvas.height),
-        vx: secureRandomCentered(0.5),
-        vy: secureRandomCentered(0.5),
-        size: secureRandomRange(0.5, 2.5),
-        opacity: 0,
-        maxOpacity: secureRandomRange(0.3, 1),
-        life: 0,
-        maxLife,
-        dying: false,
+        x: clustered ? width * 0.5 + Math.cos(angle) * radius : random(0, width),
+        y: clustered ? height * 0.5 + Math.sin(angle) * radius * 0.5 : random(0, height),
+        vx: -Math.sin(angle) * 0.18,
+        vy: Math.cos(angle) * 0.12,
+        size: random(0.6, 2.3) * depth,
+        depth,
+        phase: random(0, Math.PI * 2),
+        alpha: random(0.5, 1),
+        heat: 0,
+        energy: 0,
+        fade: 0,
       };
     };
-
-    // Initialize particles
-    const initParticles = () => {
-      particlesRef.current = Array.from({ length: MAX_PARTICLES }, () => {
-        const p = birthStar();
-        p.life = secureRandomRange(0, p.maxLife);
-        p.opacity = p.maxOpacity * Math.min(1, p.life / 50);
-        return p;
+    const resize = () => {
+      const oldWidth = width || innerWidth,
+        oldHeight = height || innerHeight;
+      width = stage.clientWidth || innerWidth;
+      height = Math.min(stage.clientHeight || innerHeight, innerHeight);
+      const ratio = Math.min(devicePixelRatio || 1, 1.5);
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      stars.forEach((star) => {
+        star.x *= width / oldWidth;
+        star.y *= height / oldHeight;
       });
+      const count = reduced
+        ? 130
+        : Math.round(Math.min(width < 768 ? 340 : 1100, Math.max(270, (width * height) / 1500)));
+      while (stars.length < count) stars.push(makeStar());
+      stars.length = count;
     };
-
-    const drawParticle = (particle: Particle) => {
-      if (particle.opacity <= 0) return;
-
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
-      ctx.fill();
-    };
-
-    const drawConnections = () => {
-      // Only draw connections to mouse when holding (skip expensive particle-to-particle)
-      const mouse = mouseRef.current;
-      if (!mouse.holding) return;
-
-      const charge = mouse.chargeLevel;
-      const connectionRange = 250 + charge * 100;
-      const particles = particlesRef.current;
-
-      ctx.beginPath();
-      particles.forEach((p) => {
-        if (p.opacity < 0.2) return;
-        const dx = mouse.x - p.x;
-        const dy = mouse.y - p.y;
-        const distSq = dx * dx + dy * dy;
-        const rangeSq = connectionRange * connectionRange;
-
-        if (distSq < rangeSq) {
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(mouse.x, mouse.y);
+    const burst = () => {
+      if (!pointer.down) return;
+      const charge = particleCharge(performance.now(), pointer.start),
+        radius = 360 + charge * Math.max(width, height) * 0.75;
+      stars.forEach((star) => {
+        const dx = star.x - pointer.x,
+          dy = star.y - pointer.y,
+          distance = Math.max(8, Math.hypot(dx, dy));
+        if (distance < radius) {
+          const force =
+            (12 + charge * charge * 100) *
+            Math.pow(1 - distance / radius, 1.2) *
+            (0.5 + star.depth);
+          star.vx += (dx / distance) * force;
+          star.vy += (dy / distance) * force;
         }
       });
-
-      const r = 255;
-      const g = Math.floor(100 + charge * 155);
-      const b = Math.floor(100 + charge * 155);
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.2 + charge * 0.3})`;
-      ctx.lineWidth = 0.5 + charge * 1;
-      ctx.stroke();
+      waves.push({ x: pointer.x, y: pointer.y, radius: 8, life: 1, power: charge });
+      if (waves.length > 3) waves.shift();
+      pointer.down = false;
+      pointer.charge = 0;
     };
-
-    const drawAttractionGlow = () => {
-      const mouse = mouseRef.current;
-      if (!mouse.holding) return;
-
-      const charge = mouse.chargeLevel;
-      const glowSize = 80 + charge * 220;
-
-      // Outer glow
-      const gradient = ctx.createRadialGradient(
-        mouse.x, mouse.y, 0,
-        mouse.x, mouse.y, glowSize
-      );
-      const r = 255;
-      const g = Math.floor(100 + charge * 155);
-      const b = Math.floor(50 + charge * 205);
-      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${0.3 + charge * 0.5})`);
-      gradient.addColorStop(0.5, `rgba(${r}, ${g * 0.5}, ${b * 0.5}, ${0.1 + charge * 0.2})`);
-      gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-
-      ctx.beginPath();
-      ctx.arc(mouse.x, mouse.y, glowSize, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.fill();
-
-      // Inner core pulse
-      if (charge > 0.1) {
-        const pulseSize = 10 + charge * 20 + Math.sin(Date.now() * 0.02) * 8 * charge;
-        const coreGradient = ctx.createRadialGradient(
-          mouse.x, mouse.y, 0,
-          mouse.x, mouse.y, pulseSize
-        );
-        coreGradient.addColorStop(0, `rgba(255, 255, 255, ${charge * 0.8})`);
-        coreGradient.addColorStop(1, 'rgba(255, 255, 200, 0)');
-
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, pulseSize, 0, Math.PI * 2);
-        ctx.fillStyle = coreGradient;
-        ctx.fill();
-      }
-    };
-
-    const updateParticles = () => {
-      const mouse = mouseRef.current;
-      const { x: mx, y: my, holding, wasHolding, holdStartTime } = mouse;
-
-      // Calculate charge level (0 to 1 over MAX_CHARGE_TIME seconds)
-      if (holding && holdStartTime > 0) {
-        const holdDuration = (Date.now() - holdStartTime) / 1000;
-        mouse.chargeLevel = Math.min(1, holdDuration / MAX_CHARGE_TIME);
-      }
-
-      // Check for explosion on release
-      const justReleased = wasHolding && !holding;
-      const releaseChargeLevel = justReleased ? mouse.chargeLevel : 0;
-
-      if (justReleased) {
-        mouse.wasHolding = false;
-        mouse.chargeLevel = 0;
-        mouse.holdStartTime = 0;
-      }
-
-      const chargeLevel = mouse.chargeLevel;
-
-      particlesRef.current.forEach((particle) => {
-        // Life cycle
-        particle.life++;
-
-        // Birth: fade in
-        if (particle.life < 100) {
-          particle.opacity = (particle.life / 100) * particle.maxOpacity;
-        }
-        // Death: fade out at 85% of life
-        else if (particle.life > particle.maxLife * 0.85) {
-          particle.dying = true;
-          const deathProgress = (particle.life - particle.maxLife * 0.85) / (particle.maxLife * 0.15);
-          particle.opacity = particle.maxOpacity * (1 - deathProgress);
-        }
-        // Normal life with twinkle
-        else if (!particle.dying) {
-          particle.opacity = particle.maxOpacity + Math.sin(particle.life * 0.05) * 0.1;
-        }
-
-        // Rebirth when dead
-        if (particle.life >= particle.maxLife || particle.opacity <= 0) {
-          const newStar = birthStar();
-          Object.assign(particle, newStar);
-        }
-
-        // Movement
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        // Mouse interaction - use squared distance for performance
-        const dx = mx - particle.x;
-        const dy = my - particle.y;
-        const distSq = dx * dx + dy * dy;
-
-        // Attraction when holding
-        if (holding && distSq < 160000 && distSq > 0) { // 400^2
-          const distance = Math.sqrt(distSq);
-          const baseForce = 0.3 + chargeLevel * 0.7;
-          const force = ((400 - distance) / 400) * baseForce;
-          particle.vx += (dx / distance) * force;
-          particle.vy += (dy / distance) * force;
-
-          // Trembling effect
-          const trembleStrength = chargeLevel * 1.5;
-          particle.vx += secureRandomCentered(trembleStrength);
-          particle.vy += secureRandomCentered(trembleStrength);
-
-          // Brighten when pulled
-          particle.opacity = Math.min(1, particle.maxOpacity + (1 - distance / 400) * (0.3 + chargeLevel * 0.3));
-        }
-        // Explosion on release - only nearby particles
-        else if (justReleased) {
-          const explosionRange = 350 + releaseChargeLevel * 250;
-          const explosionRangeSq = explosionRange * explosionRange;
-          if (distSq < explosionRangeSq && distSq > 0) {
-            const distance = Math.sqrt(distSq);
-            const chargeMultiplier = 1 + Math.pow(releaseChargeLevel, 1.5) * 12;
-            const explosionPower = 18 * chargeMultiplier;
-            const distanceFactor = Math.pow(1 - distance / explosionRange, 1.8);
-            const force = distanceFactor * explosionPower;
-            particle.vx -= (dx / distance) * force;
-            particle.vy -= (dy / distance) * force;
+    const draw = (now: number, simulate: boolean) => {
+      const dt = Math.min(2, Math.max(0.25, (now - last) / 16.667));
+      last = now;
+      ctx.clearRect(0, 0, width, height);
+      if (pointer.down) pointer.charge = particleCharge(now, pointer.start);
+      ctx.globalCompositeOperation = 'lighter';
+      let connections = 0;
+      for (const star of stars) {
+        const dx = pointer.x - star.x,
+          dy = pointer.y - star.y,
+          distanceSquared = dx * dx + dy * dy;
+        const radius = 360 + pointer.charge * Math.max(width, height) * 0.65;
+        if (simulate) {
+          if (pointer.down && distanceSquared < radius * radius) {
+            const distance = Math.max(22, Math.sqrt(distanceSquared));
+            const force =
+              (0.12 + Math.pow(pointer.charge, 1.4) * 1.4) * (1 - Math.min(1, distance / radius));
+            // Tangential acceleration makes an orbit rather than a fixed clump.
+            star.vx +=
+              ((dx / distance) * force - (dy / distance) * (0.04 + pointer.charge * 0.08)) *
+              star.depth *
+              dt;
+            star.vy +=
+              ((dy / distance) * force + (dx / distance) * (0.04 + pointer.charge * 0.08)) *
+              star.depth *
+              dt;
+          } else if (distanceSquared < 135 * 135 && distanceSquared > 1) {
+            const distance = Math.sqrt(distanceSquared),
+              force = (1 - distance / 135) * 0.3 * star.depth;
+            star.vx -= (dx / distance) * force * dt;
+            star.vy -= (dy / distance) * force * dt;
+            star.vx += pointer.vx * 0.006 * star.depth;
+            star.vy += pointer.vy * 0.006 * star.depth;
           }
+          star.phase += 0.008 * dt;
+          star.vx += Math.cos(star.phase) * 0.003 * dt;
+          star.vy += Math.sin(star.phase * 0.8) * 0.003 * dt;
+          const speed = Math.hypot(star.vx, star.vy);
+          // Momentum survives the release frame; drag slows the burst naturally.
+          if (speed > 140) {
+            star.vx *= 140 / speed;
+            star.vy *= 140 / speed;
+          }
+          star.x += star.vx * dt;
+          star.y += star.vy * dt;
+          star.vx *= Math.pow(0.99, dt);
+          star.vy *= Math.pow(0.99, dt);
+          // Open space: pass through the viewport, never hit or wrap its edges.
+          const margin = Math.max(width, height) * 0.8;
+          if (
+            star.x < -margin ||
+            star.x > width + margin ||
+            star.y < -margin ||
+            star.y > height + margin
+          ) {
+            Object.assign(star, makeStar(), { fade: 0 });
+          }
+          star.fade = Math.min(1, star.fade + 0.007 * dt);
+          const touched = pointer.down && distanceSquared < radius * radius;
+          star.energy += ((touched ? 1 : 0) - star.energy) * (touched ? 0.14 : 0.035) * dt;
+          const targetHeat = touched
+            ? Math.min(
+                1,
+                pointer.charge * 0.65 + Math.max(0, Math.hypot(star.vx, star.vy) - 1) / 65
+              )
+            : 0;
+          star.heat += (targetHeat - star.heat) * (targetHeat > star.heat ? 0.045 : 0.018) * dt;
         }
-
-        // Speed limit
-        const maxSpeed = justReleased ? 30 + releaseChargeLevel * 45 : 3;
-        const speedSq = particle.vx * particle.vx + particle.vy * particle.vy;
-        if (speedSq > maxSpeed * maxSpeed) {
-          const speed = Math.sqrt(speedSq);
-          particle.vx = (particle.vx / speed) * maxSpeed;
-          particle.vy = (particle.vy / speed) * maxSpeed;
+        const fade = reduced ? 1 : star.fade * star.fade * (3 - 2 * star.fade);
+        const brightness = star.alpha * fade * (0.9 + 0.1 * Math.sin(star.phase * 3));
+        const charged = pointer.down && distanceSquared < radius * radius;
+        const color = temperatureColor(star.heat, star.energy);
+        ctx.fillStyle = `rgba(${color},${Math.min(1, brightness + (charged ? 0.15 : 0))})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size + (charged ? 0.35 : 0), 0, Math.PI * 2);
+        ctx.fill();
+        if (star.size > 1.1 || star.heat > 0.35) {
+          ctx.fillStyle = `rgba(${color},${brightness * 0.12})`;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * (2.4 + star.heat), 0, Math.PI * 2);
+          ctx.fill();
         }
-
-        // Friction
-        particle.vx *= 0.98;
-        particle.vy *= 0.98;
-
-        // Gentle random drift
-        particle.vx += secureRandomCentered(0.02);
-        particle.vy += secureRandomCentered(0.02);
-
-        // Wrap around edges
-        if (particle.x < -20) particle.x = canvas.width + 20;
-        if (particle.x > canvas.width + 20) particle.x = -20;
-        if (particle.y < -20) particle.y = canvas.height + 20;
-        if (particle.y > canvas.height + 20) particle.y = -20;
-      });
+        const speed = Math.hypot(star.vx, star.vy);
+        if (simulate && speed > 2.5) {
+          ctx.strokeStyle = `rgba(${color},${Math.min(0.7, speed * 0.02) * star.fade})`;
+          ctx.lineWidth = Math.max(0.5, star.size * 0.6);
+          ctx.beginPath();
+          ctx.moveTo(star.x, star.y);
+          ctx.lineTo(star.x - star.vx * 2.2, star.y - star.vy * 2.2);
+          ctx.stroke();
+        }
+        if (charged && connections++ < 35) {
+          ctx.strokeStyle = `rgba(${color},${0.04 + pointer.charge * 0.07})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(star.x, star.y);
+          ctx.lineTo(pointer.x, pointer.y);
+          ctx.stroke();
+        }
+      }
+      if (pointer.down) {
+        const radius = 50 + pointer.charge * 180;
+        const glow = ctx.createRadialGradient(
+          pointer.x,
+          pointer.y,
+          0,
+          pointer.x,
+          pointer.y,
+          radius
+        );
+        const coreColor = temperatureColor(Math.min(1, pointer.charge * 0.85));
+        glow.addColorStop(0, `rgba(${coreColor},${0.1 + pointer.charge * 0.12})`);
+        glow.addColorStop(1, `rgba(${coreColor},0)`);
+        ctx.fillStyle = glow;
+        ctx.fillRect(pointer.x - radius, pointer.y - radius, radius * 2, radius * 2);
+      }
+      for (let i = waves.length - 1; i >= 0; i--) {
+        const wave = waves[i];
+        if (simulate) {
+          wave.radius += (9 + wave.power * 28) * dt;
+          wave.life -= 0.016 * dt;
+        }
+        if (wave.life <= 0) {
+          waves.splice(i, 1);
+          continue;
+        }
+        ctx.strokeStyle = `rgba(${temperatureColor(Math.min(1, wave.power * 0.8))},${wave.life * 0.45})`;
+        ctx.lineWidth = wave.life * 1.5;
+        ctx.beginPath();
+        ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      pointer.vx *= 0.85;
+      pointer.vy *= 0.85;
+      ctx.globalCompositeOperation = 'source-over';
     };
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      updateParticles();
-      drawConnections();
-      particlesRef.current.forEach(drawParticle);
-      drawAttractionGlow();
-
-      animationRef.current = requestAnimationFrame(animate);
+    const animate = (now: number) => {
+      frame = 0;
+      draw(now, playing());
+      if (visible && !document.hidden && playing()) frame = requestAnimationFrame(animate);
     };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      mouseRef.current.x = e.clientX - rect.left;
-      mouseRef.current.y = e.clientY - rect.top;
-    };
-
-    const handleMouseDown = (e: MouseEvent) => {
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      // Only activate if mouse is within canvas bounds
-      if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
-        mouseRef.current.holding = true;
-        mouseRef.current.wasHolding = true;
-        mouseRef.current.holdStartTime = Date.now();
+    const updateAnimation = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (!playing() || document.hidden || !visible) {
+        pointer.down = false;
+        pointer.charge = 0;
+      }
+      last = performance.now();
+      if (visible && !document.hidden) {
+        draw(last, false);
+        if (playing()) frame = requestAnimationFrame(animate);
       }
     };
-
-    const handleMouseUp = () => {
-      mouseRef.current.holding = false;
+    const move = (event: PointerEvent) => {
+      if (!playing()) return;
+      const rect = canvas.getBoundingClientRect(),
+        x = event.clientX - rect.left,
+        y = event.clientY - rect.top;
+      pointer.vx = Math.abs(pointer.x) > width * 2 ? 0 : Math.max(-40, Math.min(40, x - pointer.x));
+      pointer.vy =
+        Math.abs(pointer.y) > height * 2 ? 0 : Math.max(-40, Math.min(40, y - pointer.y));
+      pointer.x = x;
+      pointer.y = y;
     };
-
-    const handleMouseLeave = () => {
-      mouseRef.current.x = -1000;
-      mouseRef.current.y = -1000;
-      mouseRef.current.holding = false;
+    const down = (event: PointerEvent) => {
+      if (
+        !playing() ||
+        event.button !== 0 ||
+        (event.target as Element).closest('a,button,input,summary')
+      )
+        return;
+      move(event);
+      pointer.down = true;
+      pointer.start = performance.now();
+      pointer.charge = 0;
     };
-
-    // Initialize
+    const leave = () => {
+      burst();
+      pointer.x = -10000;
+      pointer.y = -10000;
+    };
+    const cancel = () => {
+      pointer.down = false;
+      pointer.charge = 0;
+      pointer.x = -10000;
+      pointer.y = -10000;
+    };
+    const onResize = () => {
+      resize();
+      updateAnimation();
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      updateAnimation();
+    });
+    const stateObserver = new MutationObserver(updateAnimation);
+    const colorObserver = new MutationObserver(() => {
+      syncAccent();
+      if (!playing()) updateAnimation();
+    });
     resize();
-    initParticles();
-    animate();
-
-    // Event listeners
-    window.addEventListener('resize', resize);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mouseleave', handleMouseLeave);
-
+    syncAccent();
+    updateAnimation();
+    observer.observe(canvas);
+    stateObserver.observe(stage, { attributes: true, attributeFilter: ['data-playground-active'] });
+    colorObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+    stage.addEventListener('pointermove', move, { passive: true });
+    stage.addEventListener('pointerdown', down, { passive: true });
+    stage.addEventListener('pointerleave', leave, { passive: true });
+    window.addEventListener('pointerup', burst, { passive: true });
+    window.addEventListener('pointercancel', cancel, { passive: true });
+    window.addEventListener('blur', cancel);
+    window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', updateAnimation);
     return () => {
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('mouseleave', handleMouseLeave);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      stateObserver.disconnect();
+      colorObserver.disconnect();
+      stage.removeEventListener('pointermove', move);
+      stage.removeEventListener('pointerdown', down);
+      stage.removeEventListener('pointerleave', leave);
+      window.removeEventListener('pointerup', burst);
+      window.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('blur', cancel);
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', updateAnimation);
     };
-  }, []);
-
+  }, [reduced]);
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 z-[1]"
+      className="absolute inset-0 z-[1] w-full h-full pointer-events-none"
       aria-hidden="true"
     />
   );

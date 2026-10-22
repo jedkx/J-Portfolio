@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 COPY package*.json ./
@@ -10,6 +10,7 @@ COPY postcss.config.js tailwind.config.js vite.config.ts ./
 COPY src ./src
 COPY public ./public
 COPY scripts ./scripts
+COPY tests ./tests
 
 # Keep source files read-only for non-root runtime user.
 RUN chmod -R a-w /app/src /app/public /app/index.html /app/tsconfig.json /app/tsconfig.node.json /app/postcss.config.js /app/tailwind.config.js /app/vite.config.ts

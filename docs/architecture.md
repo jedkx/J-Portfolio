@@ -1,70 +1,57 @@
-# Architecture
+# Runtime architecture
 
-## Purpose
+The site's personal terminal/space identity is deliberate. Architecture work must not replace that identity with a generic portfolio template.
 
-This document explains the runtime architecture of `J-Portfolio`, with focus on the Projects domain that combines static curation and live GitHub synchronization.
+## Active boundaries
 
-## System Boundaries
+| Responsibility                                     | Owner                                                                           |
+| -------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Boot, theme, application providers                 | `src/App.tsx`                                                                   |
+| Content and accessible scene markup                | `src/components/sections/PortfolioExperience.tsx`                               |
+| Reversible GSAP scene lifecycle                    | `src/features/portfolio/usePortfolioScene.ts`                                   |
+| Gallery index, navbar offset and scroll geometry   | `src/features/portfolio/scene.ts`                                               |
+| Real README previews / explicit abstract fallbacks | `src/features/portfolio/RepositoryVisual.tsx`                                   |
+| Original terminal layout                           | `src/components/sections/NeofetchTerminal.tsx`                                  |
+| GitHub transport and mapping                       | `src/lib/github.ts`                                                             |
+| Validated optional browser cache                   | `src/lib/projectCache.ts`                                                       |
+| Fetch orchestration and four-worker preview queue  | `src/hooks/useProjects.ts`                                                      |
+| Cancellable, timed profile/contribution requests   | `src/lib/request.ts`                                                            |
+| Untrusted contribution data validation             | `src/lib/contributions.ts`                                                      |
+| Optional discovery game and resident               | `src/components/game/`                                                          |
+| Visible-key sonar                                  | `src/components/game/FragmentSonar.tsx`, target measurement in `SecretGame.tsx` |
+| Particle charge bounds and safe color lookup       | `src/lib/particleColor.ts`                                                      |
 
-- **Frontend app:** React + TypeScript single-page application.
-- **Data sources:**
-  - Static source: `src/constants/data.ts`
-  - Remote source: GitHub REST API (`/users/jedkx/repos`)
-- **Runtime target:** Browser (GitHub Pages in production, Dockerized Vite in local development).
+## Invariants
 
-## High-Level Flow
+- GSAP owns animated transforms, opacity and masks; React owns selected content, accessibility and expanded-preview state.
+- Each scene uses a scoped GSAP context and reverts it on teardown. Media-query changes restore normal flow on short screens and for reduced motion.
+- Hero and About are independent normal-flow sections. About has no inner scrollbar or wheel handler. Only the repository gallery is sticky; its selected index follows the scrubbed playhead.
+- Scroll geometry lives in `scene.ts`; tests cover index clamping and gallery distance including one exit step. `portfolio-chapters.css` uses matching viewport/step bounds and the project-count custom property. Refresh must restore selection and playhead together.
+- Repository metadata, cache data and contribution responses are untrusted. Validate at the boundary, never insert remote HTML, and allow only HTTPS preview URLs.
+- Fetches must be cancellable. Optional APIs have a timeout and an offline state; contact links never depend on the game or GitHub.
+- No GitHub token is shipped. Browser SHA-256 is a local puzzle shortcut, **not authentication**.
+- Hidden scene panels are inert and excluded from assistive technology; navigation and real repository links remain keyboard reachable.
+- A repository without a screenshot gets abstract cover art, not a fabricated product screenshot.
 
-1. `ProjectsSection` consumes `useProjects`.
-2. `useProjects` initializes with static data (`PROJECTS`).
-3. Hook asynchronously fetches GitHub public repositories.
-4. Raw repo payload is normalized into internal `Project` shape.
-5. Static and dynamic lists are merged by deterministic identity rules.
-6. UI renders merged list; static list remains fallback on remote errors.
+## Styles and remaining debt
 
-## Layered Structure
+`main.css` supplies the base; `editorial.css` and `quiet.css` contain earlier design layers. `experience.css` still contains old scene rules alongside active rules. Do not append another global redesign layer to override them.
 
-- **Presentation layer**
-  - `src/components/sections/ProjectsSection.tsx`
-- **State orchestration**
-  - `src/hooks/useProjects.ts`
-- **Integration/data layer**
-  - `src/lib/github.ts`
-  - `src/lib/projectMapper.ts`
-  - `src/lib/mergeProjects.ts`
-- **Domain model**
-  - `src/types/index.ts`
+Active scoped owners include `terminal-original.css`, `navigation.css`, `reference-ribbon.css`, `secret-game.css`, `contact-station.css`, `portfolio-chapters.css` and `components/game/fragment-sonar.css`. `refinement.css` is an accumulated compatibility layer and remains consolidation debt. Consolidate legacy selectors feature by feature only with desktop/mobile visual checks, including reverse scroll, expansion, dialogs and reduced motion. Retired section components remain as compatibility code; the active application imports modules directly rather than their legacy barrel.
 
-## Design Decisions
+## Verification
 
-### 1) Static-first initialization
+Use Node 22.12+ (`.nvmrc` pins the CI/Docker major), then:
 
-The UI always has immediate content from static data before any network call finishes.
+```sh
+npm ci
+npm run lint
+npm run type-check
+npm test
+npm run build
+npm audit --omit=dev
+```
 
-### 2) Deterministic merge behavior
+PR quality gates do not deploy. The separate Pages workflow deploys only when pushed to `main` or explicitly dispatched. Nothing was committed, pushed or deployed during the audit.
 
-Potential duplicates are detected by GitHub/link identity normalization.  
-If a static item represents the same repo, static item wins.
-
-### 3) Degrade-safe runtime
-
-Any API failure falls back to static projects without crashing rendering path.
-
-### 4) Small testable units
-
-Fetch, mapping, and merge logic are split into separate files to keep responsibilities narrow.
-
-## Failure Modes and Handling
-
-- **GitHub rate limit / network error**
-  - Behavior: return static-only list
-  - User impact: no crash, no blank section
-- **Unexpected repo data shape**
-  - Behavior: mapper defaults are used (description/tags/category/link fallbacks)
-- **Duplicate listing**
-  - Behavior: merge identity rules prevent duplicate cards
-
-## Local Development Runtime
-
-- `docker-compose.yml` runs Vite dev server in container.
-- Source code is mounted as volume for hot reload.
-- Default URL: `http://localhost:3000`.
+Unit tests cover production parsers, request failures/cancellation, gallery geometry, block-eye boundaries, negative particle timestamps and safe palette lookup. They are not a replacement for browser/device coverage, user testing, accessibility measurement or performance profiling.

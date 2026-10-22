@@ -2,32 +2,7 @@
 // DATA CONSTANTS - Portfolio Content
 // ============================================
 
-import type { Education, Experience, NavItem, Project, Skill, SocialLink } from '@/types';
-
-export const PROJECTS: Project[] = [
-  {
-    id: 'project-01',
-    title: 'BELSISNET REPORTING PLATFORM',
-    category: 'ENTERPRISE',
-    description:
-      'Enterprise municipal reporting system serving 200+ municipalities across Turkey. Full-stack development with role-based authorization, dynamic report management, version control, and 50% performance optimization through caching mechanisms.',
-    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1600&auto=format&fit=crop',
-    tags: ['ASP.NET Core', 'DevExpress', 'Entity Framework', 'SQL Server', 'RBAC'],
-    link: 'https://belsis.com.tr',
-    github: '',
-  },
-  {
-    id: 'project-02',
-    title: 'PWNAGOTCHI',
-    category: 'HARDWARE',
-    description:
-      'AI-powered WiFi security research device using Raspberry Pi Zero W. Deep reinforcement learning for network analysis and security testing with custom OLED interface.',
-    imageUrl: 'https://miro.medium.com/v2/resize:fit:720/format:webp/0*ZyM9WnUwk-sXjjha',
-    tags: ['Raspberry Pi', 'Python', 'Machine Learning', 'Cybersecurity', 'IoT'],
-    link: 'https://medium.com/@ccoskun742/pwnagotchi-setup-a-practical-guide-and-my-advanced-usage-notes-0c698bc07b28',
-    github: 'https://github.com/jedkx',
-  },
-];
+import type { Education, Experience, NavItem, Skill, SocialLink } from '@/types';
 
 export const SKILLS: Skill[] = [
   { name: 'C', level: 85, category: 'backend' },
@@ -66,6 +41,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'ABOUT', href: '#about' },
   { label: 'WORK', href: '#projects' },
   { label: 'CONTACT', href: '#contact' },
+  { label: 'WHO’S THERE?', href: '#whos-there' },
 ];
 
 export const TYPEWRITER_TEXTS = [
@@ -103,54 +79,49 @@ export const MANIFESTO_QUOTE = 'One Code to rule them all.';
 export const MANIFESTO_ITEMS = [
   {
     text: 'ACCIO SOLUTION',
-    color: '#5899e2',
-    textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
-    font: '"Book Antiqua", Palatino, Georgia, serif',
+    reference: 'wizard',
+    title: 'Harry Potter',
+    href: 'https://www.harrypotter.com/',
+    color: '#d4b275',
+    font: '"Cinzel Decorative", Georgia, serif',
     fontWeight: '700',
-    letterSpacing: '0.1em',
-    fontSize: '1em',
   },
-  { text: '•', color: '#555555', font: 'inherit' },
   {
     text: 'HELLO FRIEND',
-    color: '#ff0000',
-    textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
-    font: 'Consolas, "Courier New", monospace',
-    fontWeight: '900',
-    letterSpacing: '0.3em',
-    fontSize: '1em',
+    reference: 'hacker',
+    title: 'Mr. Robot',
+    href: 'https://www.imdb.com/title/tt4158110/',
+    color: '#f34848',
+    font: '"Share Tech Mono", monospace',
+    fontWeight: '400',
   },
-  { text: '•', color: '#555555', font: 'inherit' },
   {
     text: 'SHALL NOT PASS',
-    color: '#9fdc7c',
-    textShadow: '2px 2px 0px rgba(0,0,0,0.9), -1px -1px 0px rgba(0,0,0,0.5)',
-    font: '"Times New Roman", Georgia, serif',
-    fontWeight: '700',
-    letterSpacing: '0.2em',
-    fontSize: '1em',
+    reference: 'middleearth',
+    title: 'The Lord of the Rings',
+    href: 'https://www.warnerbros.com/movies/lord-rings-fellowship-ring',
+    color: '#a9b58a',
+    font: '"Cormorant Unicase", Georgia, serif',
+    fontWeight: '600',
   },
-  { text: '•', color: '#555555', font: 'inherit' },
   {
     text: 'TIME IS A FLAT CIRCLE',
-    color: '#ffffff',
-    textShadow: '3px 3px 0px #000000, -1px -1px 0px #000000',
-    font: '"Century Gothic", "Trebuchet MS", sans-serif',
-    fontWeight: '900',
-    letterSpacing: '0.08em',
-    fontSize: '1em',
+    reference: 'noir',
+    title: 'True Detective',
+    href: 'https://www.hbo.com/true-detective',
+    color: '#c3ad89',
+    font: '"Oswald", sans-serif',
+    fontWeight: '500',
   },
-  { text: '•', color: '#555555', font: 'inherit' },
   {
     text: 'VALAR MORGHULIS',
-    color: '#d63031',
-    textShadow: '2px 2px 0px #000000, -1px -1px 0px rgba(0,0,0,0.5)',
-    font: '"Garamond", "Times New Roman", serif',
+    reference: 'thrones',
+    title: 'Game of Thrones',
+    href: 'https://www.hbo.com/game-of-thrones',
+    color: '#acb9c3',
+    font: '"Cinzel Decorative", Georgia, serif',
     fontWeight: '700',
-    letterSpacing: '0.15em',
-    fontSize: '1em',
   },
-  { text: '•', color: '#555555', font: 'inherit' },
 ];
 
 export const PERSONAL_INFO = {

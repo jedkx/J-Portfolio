@@ -84,4 +84,4 @@ export const GSAP_DEFAULTS = {
   duration: 0.8,
 } as const;
 
-export const CV_DRIVE_FILE_ID = '107oP8Qt9F1LHSN4uTkSDpXHB6huQOUo2';
+export const CV_DRIVE_FILE_ID = '1AgQYEGXntEEDf31rzrcfPjonrO44K5Ao';
