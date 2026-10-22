@@ -1518,29 +1518,40 @@
     opacity: 0;
   }
 }
-/* Normal cursor behavior is unchanged; only recovered keys carry a rainbow. */
+/* Make discoverable words unmistakable without changing ordinary button hover. */
 body.key-hover .cursor-ring {
-  animation: key-cursor-border 2s linear infinite;
+  width: 72px;
+  height: 72px;
+  border-width: 2px;
+  border-style: solid;
+  background: transparent;
+  box-shadow: 0 0 12px currentColor, inset 0 0 8px currentColor;
+  animation: key-cursor-border 1.2s linear infinite;
 }
 body.key-hover .cursor-dot {
-  animation: key-cursor-fill 2s linear infinite;
+  animation: key-cursor-fill 1.2s linear infinite;
 }
 @keyframes key-cursor-border {
   0%,
   100% {
     border-color: #ff6b8a;
+    color: #ff6b8a;
   }
   20% {
     border-color: #ffc66b;
+    color: #ffc66b;
   }
   40% {
     border-color: #a8e878;
+    color: #a8e878;
   }
   60% {
     border-color: #70dfe8;
+    color: #70dfe8;
   }
   80% {
     border-color: #bb91ff;
+    color: #bb91ff;
   }
 }
 @keyframes key-cursor-fill {
