@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { usePrefersReducedMotion } from '@/hooks';
 import { HiddenResident } from '@/components/game/HiddenResident';
+import { residentIntro, residentIntroBlinks, residentIntroPoses } from '@/assets/residentIntro';
 
 const BOOT_LINES = [
   '> INITIALIZING VOID PROTOCOL...',
@@ -17,9 +18,8 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
   const root = useRef<HTMLDivElement>(null);
   const percent = useRef<HTMLSpanElement>(null);
   const bar = useRef<HTMLSpanElement>(null);
-  const [eating, setEating] = useState(false);
-  const [anticipating, setAnticipating] = useState(false);
-  const [residentAwake, setResidentAwake] = useState(false);
+  const [introFrame, setIntroFrame] = useState(0);
+  const [introEyes, setIntroEyes] = useState<readonly [number, number] | undefined>();
   const [currentLine, setCurrentLine] = useState(0);
   const reduced = usePrefersReducedMotion();
   useLayoutEffect(() => {
@@ -83,11 +83,22 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
             });
         };
         const sequence = gsap.timeline({ onComplete });
+        residentIntroPoses.forEach(({ at, frame }) =>
+          sequence.call(() => setIntroFrame(frame), [], at)
+        );
+        residentIntroBlinks.forEach(({ at, eyes }) =>
+          sequence.call(() => setIntroEyes(eyes), [], at)
+        );
+        sequence.call(() => setIntroEyes(undefined), [], residentIntro.prepare);
         sequence
-          .from('.site-boot-copy', { opacity: 0, y: 12, duration: 0.5, ease: 'power3.out' })
+          .from('.site-boot-copy', { opacity: 0, y: 12, duration: 0.5, ease: 'power3.out' }, 0)
           .call(() => setCurrentLine(1), [], 0)
           .call(() => setCurrentLine(2), [], 0.85)
-          .to(boot, { value: 100, duration: 8.2, ease: 'none', onUpdate: updateBoot }, 0)
+          .to(
+            boot,
+            { value: 100, duration: residentIntro.ready, ease: 'none', onUpdate: updateBoot },
+            0
+          )
           .call(printSurface, [], 1.48)
           .set(copy, { autoAlpha: 0 }, 1.5)
           .set(root.current, { attr: { 'data-rift-state': 'open' } }, 1.5)
@@ -106,16 +117,6 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
             { opacity: 0, duration: 0.35, ease: 'sine.out' },
             1.9
           )
-          .call(() => setResidentAwake(true), [], 2.6)
-          .call(() => setAnticipating(true), [], 3.4)
-          .call(
-            () => {
-              setAnticipating(false);
-              setEating(true);
-            },
-            [],
-            4.4
-          )
           .call(
             () => {
               root
@@ -123,7 +124,7 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
                 .forEach((node) => gsap.set(node, { opacity: 0 }));
             },
             [],
-            3.75
+            residentIntro.lift
           )
           .fromTo(
             ghost,
@@ -152,33 +153,40 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
               yPercent: -50,
               scale: 0.55,
               rotation: 0,
-              duration: 0.65,
+              duration: residentIntro.arrive - residentIntro.lift,
               ease: 'power2.inOut',
               immediateRender: false,
             },
-            3.75
+            residentIntro.lift
           )
-          .to(ghost, { scale: 0.025, autoAlpha: 0, duration: 0.12, ease: 'power2.in' }, 4.4)
-          .call(() => setEating(false), [], 4.7)
+          .to(
+            ghost,
+            { scale: 0.025, autoAlpha: 0, duration: 0.18, ease: 'power2.in' },
+            residentIntro.arrive
+          )
           .to(
             '.boot-page-top',
             { yPercent: 0, rotation: 0, duration: 0.65, ease: 'power3.inOut' },
-            5.4
+            residentIntro.close
           )
           .to(
             '.boot-page-bottom',
             { yPercent: 0, rotation: 0, duration: 0.65, ease: 'power3.inOut' },
-            5.4
+            residentIntro.close
           )
-          .set('.boot-page', { clearProps: 'transform' }, 6.05)
-          .set(root.current, { attr: { 'data-rift-state': 'closed' } }, 6.05)
-          .set(copy, { autoAlpha: 1 }, 6.05)
-          .call(() => prints.forEach((print) => print.remove()), [], 6.06)
-          .call(() => setCurrentLine(3), [], 6.05)
-          .call(() => setCurrentLine(4), [], 6.55)
-          .call(() => setCurrentLine(5), [], 7.2)
-          .call(() => setCurrentLine(6), [], 8.2)
-          .to(root.current, { opacity: 0, duration: 1.1, ease: 'sine.inOut' }, 8.65);
+          .set('.boot-page', { clearProps: 'transform' }, residentIntro.closed)
+          .set(root.current, { attr: { 'data-rift-state': 'closed' } }, residentIntro.closed)
+          .set(copy, { autoAlpha: 1 }, residentIntro.closed)
+          .call(() => prints.forEach((print) => print.remove()), [], residentIntro.closed + 0.01)
+          .call(() => setCurrentLine(3), [], residentIntro.closed)
+          .call(() => setCurrentLine(4), [], 8.25)
+          .call(() => setCurrentLine(5), [], 8.9)
+          .call(() => setCurrentLine(6), [], residentIntro.ready)
+          .to(
+            root.current,
+            { opacity: 0, duration: 1.1, ease: 'sine.inOut' },
+            residentIntro.reveal
+          );
       }, root);
     };
     const fallback = window.setTimeout(start, 1100);
@@ -200,7 +208,7 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
       aria-label="Portfolio boot sequence"
     >
       <div className="boot-backstage" aria-hidden="true">
-        <HiddenResident cameo awake={residentAwake} eating={eating} anticipating={anticipating} />
+        <HiddenResident cameo frameOverride={introFrame} eyesOverride={introEyes} />
       </div>
       <div className="boot-page boot-page-top" aria-hidden="true" />
       <div className="boot-page boot-page-bottom" aria-hidden="true" />

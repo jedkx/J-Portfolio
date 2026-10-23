@@ -2,6 +2,11 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import gsap from 'gsap';
 import { HiddenResident } from './HiddenResident';
 import { usePrefersReducedMotion } from '@/hooks';
+import {
+  residentSpokenWord,
+  residentReactionLines,
+  type ResidentReaction,
+} from '@/assets/residentAnimation';
 
 const returnGreetings = [
   'Oh... it’s you again. Hi.',
@@ -23,6 +28,7 @@ export const SiteRift: React.FC<{
   const ready = useRef(false);
   const visited = useRef(false);
   const closeTimer = useRef(0);
+  const reactionVisits = useRef<Partial<Record<ResidentReaction, number>>>({});
   const [message, setMessage] = useState(() =>
     visit > 1
       ? returnGreetings[(visit - 2) % returnGreetings.length]
@@ -43,11 +49,16 @@ export const SiteRift: React.FC<{
     setTyped('');
     const letters = Array.from(message);
     let length = 0;
-    const timer = window.setInterval(() => {
+    let timer = 0;
+    const type = () => {
       setTyped(letters.slice(0, ++length).join(''));
-      if (length === letters.length) window.clearInterval(timer);
-    }, 28);
-    return () => window.clearInterval(timer);
+      if (length < letters.length) {
+        const punctuation = /[.,!?…]/.test(letters[length - 1]);
+        timer = window.setTimeout(type, punctuation ? 160 : 28);
+      }
+    };
+    timer = window.setTimeout(type, 28);
+    return () => window.clearTimeout(timer);
   }, [message, reduced, speechReady]);
   const reactToFace = useCallback((hovered: boolean) => {
     if (!ready.current || closing.current) return;
@@ -55,6 +66,13 @@ export const SiteRift: React.FC<{
       visited.current = true;
       setMessage('Oh... hi. A little close, aren’t you?');
     } else if (visited.current) setMessage('You can stay. Just... don’t tell anyone.');
+  }, []);
+  const reactToMotion = useCallback((reaction: ResidentReaction) => {
+    if (!ready.current || closing.current) return;
+    const lines = residentReactionLines[reaction];
+    const count = reactionVisits.current[reaction] ?? 0;
+    reactionVisits.current[reaction] = count + 1;
+    setMessage(lines[count % lines.length]);
   }, []);
   useLayoutEffect(() => {
     const element = dialog.current!;
@@ -179,7 +197,13 @@ export const SiteRift: React.FC<{
           </h2>
         </div>
         <div className="rift-presence">
-          <HiddenResident onFaceHoverChange={reactToFace} />
+          <HiddenResident
+            onFaceHoverChange={reactToFace}
+            onReaction={reactToMotion}
+            departing={departing}
+            speechText={residentSpokenWord(message, typed)}
+            speaking={speechReady && typed.length < message.length && !/[.,!?…]\s*$/.test(typed)}
+          />
         </div>
         <button type="button" className="rift-exit hoverable" onClick={close} disabled={departing}>
           {departing ? 'Your secret is safe.' : 'I’ll keep your secret. ↗'}

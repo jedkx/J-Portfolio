@@ -1,78 +1,86 @@
-// ASCII Motion frame playback, with a controlled frame for visitor interactions.
-import React, { useEffect, useState } from 'react';
-import { residentFrames, trackedResidentLines, type ResidentGaze } from './residentBlockFrames';
-export { residentFrames } from './residentBlockFrames';
+import React, { useEffect, useRef, useState } from 'react';
+import leftUrl from '../../art/resident/eye-left.png';
+import rightUrl from '../../art/resident/eye-right.png';
+import mouthUrl from '../../art/resident/mouth.png';
+import leftData from '../../art/resident/eye-left.json';
+import rightData from '../../art/resident/eye-right.json';
+import mouthData from '../../art/resident/mouth.json';
+import {
+  residentFrames,
+  residentPupil,
+  residentEatingEyes,
+  residentTracking,
+  type ResidentGaze,
+} from './residentAnimation';
 
-interface ResidentMotionExportProps {
-  autoPlay?: boolean;
-  loop?: boolean;
-  className?: string;
-  frameIndex?: number;
-  gaze?: ResidentGaze;
-}
-
-export const ResidentMotionExport: React.FC<ResidentMotionExportProps> = ({
-  autoPlay = true,
-  loop = true,
-  className = '',
-  frameIndex,
-  gaze,
-}) => {
-  const [currentFrame, setCurrentFrame] = useState(0);
-  useEffect(() => {
-    if (!autoPlay || frameIndex !== undefined) return;
-    const timer = window.setTimeout(
-      () =>
-        setCurrentFrame((previous) => {
-          const next = previous + 1;
-          return next < residentFrames.length ? next : loop ? 0 : previous;
-        }),
-      residentFrames[currentFrame].duration
-    );
-    return () => window.clearTimeout(timer);
-  }, [currentFrame, autoPlay, loop, frameIndex]);
-  // Render the authored block cells geometrically: quadrant glyphs can fall
-  // back to another font and develop gaps when the pupil changes direction.
-  const quadrants = [
-    ' ',
-    '▘',
-    '▝',
-    '▀',
-    '▖',
-    '▌',
-    '▞',
-    '▛',
-    '▗',
-    '▚',
-    '▐',
-    '▜',
-    '▄',
-    '▙',
-    '▟',
-    '█',
-  ];
-  const path = trackedResidentLines(frameIndex ?? currentFrame, gaze)
-    .flatMap((line, row) =>
-      Array.from(line).flatMap((cell, col) => {
-        const bits = Math.max(0, quadrants.indexOf(cell));
-        return [0, 1, 2, 3]
-          .filter((bit) => bits & (1 << bit))
-          .map((bit) => `M${col * 2 + (bit % 2)} ${row * 2 + Math.floor(bit / 2)}h1v1h-1z`);
-      })
+const atlases = [leftData, rightData, mouthData].map((data) => Object.values(data.frames));
+let loaded: Promise<HTMLImageElement[]> | undefined;
+const loadImages = () =>
+  (loaded ??= Promise.all(
+    [leftUrl, rightUrl, mouthUrl].map(
+      (src) =>
+        new Promise<HTMLImageElement>((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error('Resident atlas failed to load'));
+          image.src = src;
+        })
     )
-    .join('');
+  ));
+const widths = [6, 10, 12, 14, 16, 16, 16, 16, 16, 16, 14, 12, 10, 6];
+
+/** Aseprite supplies artwork; Canvas composites clips and alpha-cutout gaze. */
+export const ResidentMotionExport: React.FC<{
+  frameIndex?: number;
+  mouthFrameIndex?: number;
+  eyeFrameIndices?: readonly [number, number];
+  gaze?: ResidentGaze;
+}> = ({ frameIndex = 0, mouthFrameIndex, eyeFrameIndices, gaze }) => {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [images, setImages] = useState<HTMLImageElement[]>([]);
+  useEffect(() => {
+    let active = true;
+    loadImages()
+      .then((result) => {
+        if (active) setImages(result);
+      })
+      .catch(() => {
+        loaded = undefined;
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  useEffect(() => {
+    const ctx = canvas.current?.getContext('2d');
+    if (!ctx || images.length !== 3) return;
+    ctx.setTransform(4, 0, 0, 4, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, 68, 40);
+    const eyes = eyeFrameIndices ?? residentEatingEyes(frameIndex);
+    for (let layer = 0; layer < 3; layer++) {
+      const index = layer === 2 ? (mouthFrameIndex ?? frameIndex) : (eyes?.[layer] ?? frameIndex);
+      const { frame } = atlases[layer][index] ?? atlases[layer][0];
+      ctx.drawImage(images[layer], frame.x, frame.y, frame.w, frame.h, 0, 0, 68, 40);
+      const tracking = layer === 0 ? residentTracking.left : residentTracking.right;
+      if (layer < 2 && gaze?.active && tracking.includes(index)) {
+        const x = layer === 0 ? 6 : 46;
+        ctx.fillStyle = '#f4f4f4';
+        widths.forEach((width, row) => ctx.fillRect(x + (16 - width) / 2, 10 + row, width, 1));
+        const pupil = residentPupil(gaze);
+        // Alpha removal, never a black rectangle: the background remains visible.
+        ctx.clearRect(x + pupil.x, 10 + pupil.y, pupil.width, pupil.height);
+      }
+    }
+  }, [images, frameIndex, mouthFrameIndex, eyeFrameIndices, gaze]);
   return (
-    <div className={className}>
-      <svg
-        className="resident-motion-frame resident-block-grid"
-        viewBox="0 0 68 24"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        shapeRendering="crispEdges"
-      >
-        <path d={path} fill="currentColor" />
-      </svg>
-    </div>
+    <canvas
+      ref={canvas}
+      width={272}
+      height={160}
+      className="resident-motion-frame resident-block-grid"
+      aria-hidden="true"
+      data-resident-frame={Math.min(frameIndex, residentFrames.length - 1)}
+    />
   );
 };
-export default ResidentMotionExport;

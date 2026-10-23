@@ -177,6 +177,14 @@
   display: block;
   width: 20.4em;
   height: 12em;
+  image-rendering: pixelated;
+  aspect-ratio: 68 / 40;
+}
+.boot-backstage .resident-mouth {
+  left: 50%;
+  top: 77.5%;
+  width: 1px;
+  height: 1px;
 }
 .site-bottom {
   padding: 16px var(--signal-gutter, 5vw);
