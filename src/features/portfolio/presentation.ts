@@ -2,7 +2,7 @@
 const titles: Record<string, string> = {
   JedkxClicker: 'Jedkx Clicker',
   jedkxWTTG3: 'WTTG Assistant',
-  'J-Portfolio': 'Dark Matter',
+  'J-Portfolio': 'J-Portfolio',
   'Jedkx-NewsPaper-Portfolio': 'Newspaper Portfolio',
   DxReportReview: 'Report Review',
 };

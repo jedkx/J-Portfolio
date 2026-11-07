@@ -5,12 +5,12 @@ import { HiddenResident } from '@/components/game/HiddenResident';
 import { residentIntro, residentIntroBlinks, residentIntroPoses } from '@/assets/residentIntro';
 
 const BOOT_LINES = [
-  '> INITIALIZING VOID PROTOCOL...',
-  '> ESTABLISHING NEURAL LINK...',
-  '> RESTORING DISPLAY BUFFER...',
-  '> LOADING SYSTEM CORE...',
-  '> CALIBRATING SENSORS...',
-  '> SYSTEM READY.',
+  '> LOADING PROFILE...',
+  '> PREPARING PROJECTS...',
+  '> LOADING INTERACTIONS...',
+  '> PREPARING THE PAGE...',
+  '> ALMOST THERE...',
+  '> READY.',
 ];
 
 // The percentage represents this staged boot sequence, not a network transfer.
@@ -213,7 +213,7 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
       <div className="boot-page boot-page-top" aria-hidden="true" />
       <div className="boot-page boot-page-bottom" aria-hidden="true" />
       <div className="site-boot-copy">
-        <span className="site-boot-label">DARK MATTER / BOOT SEQUENCE</span>
+        <span className="site-boot-label">CANER COŞKUN / PORTFOLIO</span>
         <h1 aria-label="Hello friend">
           HELLO{' '}
           <span>

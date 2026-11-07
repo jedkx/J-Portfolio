@@ -1,0 +1,36 @@
+/* Decoration may degrade; navigation and readable content must remain usable. */
+:root[data-render-quality='low'] .noise,
+:root[data-render-quality='low'] .scanlines {
+  display: none;
+}
+:root[data-render-quality='low'] .signal-nav,
+:root[data-render-quality='low'] .fragment-sonar,
+:root[data-render-quality='low'] .secret-hint-dialog {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root[data-render-quality='low'] .spotlight-card__grain {
+  display: none;
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .signal-nav {
+    background: #090909f5 !important;
+  }
+}
+.run-game-placeholder {
+  aspect-ratio: 480 / 300;
+  min-height: 200px;
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  color: #aaa;
+  font: 12px var(--font-tech);
+  background: #090909;
+  border: 1px solid #ffffff20;
+}
+.run-game-placeholder button {
+  min-height: 44px;
+  padding: 10px 20px;
+  color: #eee;
+  border: 1px solid #ffffff30;
+}

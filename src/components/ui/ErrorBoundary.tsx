@@ -48,33 +48,36 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
           <div className="border border-alert/30 p-8 max-w-lg w-full text-center relative">
             <div className="absolute -top-3 left-4 bg-void px-2">
-              <span className="font-mono text-[10px] text-alert tracking-widest">SYSTEM_FAULT</span>
+              <span className="font-mono text-[10px] text-alert tracking-widest">Caner Coşkun</span>
             </div>
 
             <div className="mb-6">
               <span className="font-mono text-xs text-terminal-dark tracking-[0.3em] block mb-4">
-                ERROR_DETECTED
+                Portfolio
               </span>
               <h1 className="text-3xl font-display font-black text-terminal mb-2">
-                SOMETHING<br />
+                SOMETHING
+                <br />
                 <span className="text-alert">WENT WRONG</span>
               </h1>
             </div>
 
-            {this.state.error && (
-              <div className="border border-terminal/10 p-3 mb-6 text-left">
-                <p className="font-mono text-xs text-terminal-dark break-all">
-                  {this.state.error.message}
-                </p>
-              </div>
-            )}
+            <p className="text-sm text-terminal-muted mb-6">
+              Please try again, or get in touch by email.
+            </p>
 
             <button
               onClick={this.handleReset}
               className="font-mono text-xs tracking-widest px-6 py-3 border border-terminal/30 text-terminal hover:border-terminal hover:bg-terminal/5 transition-all duration-300 hoverable"
             >
-              RELOAD_SYSTEM
+              Try again
             </button>
+            <a
+              href="mailto:ccoskun742@gmail.com"
+              className="block text-sm text-terminal underline p-3 mt-3"
+            >
+              Email Caner
+            </a>
           </div>
         </div>
       );

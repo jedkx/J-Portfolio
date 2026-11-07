@@ -311,12 +311,11 @@ export const SecretGameProvider: React.FC<React.PropsWithChildren> = ({ children
           </button>
           <span className="secret-eyebrow">A HIDDEN GAME</span>
           <h2 id="secret-dialog-title">How to play</h2>
-          <p>
-            Find 5 hidden keys and connect the signal.
-          </p>
+          <p>Find 5 hidden keys and connect the signal.</p>
           <ol>
             <li>
-              Go to Who’s there? Move the slider until it says “SIGNAL CONNECTED”.
+              Go to Who’s there? Play Signal Run. Reach 100 points to open the radar; keep playing
+              as long as you like.
             </li>
             <li>
               A small radar will appear at the bottom-right. Its dots point to keys on your screen.
@@ -326,10 +325,7 @@ export const SecretGameProvider: React.FC<React.PropsWithChildren> = ({ children
               Keys hide in normal words. Click a word where the radar points, or tap it on your
               phone. On a computer, your mouse pointer turns rainbow over the right word.
             </li>
-            <li>
-              Keys are saved for you. Find all 5, go back to Who’s there? and press Decrypt. If
-              needed, move the slider to connect again.
-            </li>
+            <li>Keys are saved for you. Find all 5, go back to Who’s there? and press Decrypt.</li>
             <li>
               After completing the game, you’ll get a password to skip the key search next time.
             </li>

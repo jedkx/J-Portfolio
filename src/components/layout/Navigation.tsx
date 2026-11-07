@@ -1,5 +1,5 @@
 // ============================================
-// NAVIGATION - DARK MATTER MINIMAL
+// Portfolio navigation
 // ============================================
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -37,6 +37,24 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
   const mobilePanelRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const navigationCleanup = useRef<(() => void) | null>(null);
+  const navigateRef = useRef<(href: string, record?: boolean) => void>(() => {});
+  useEffect(() => {
+    let frame = 0;
+    const previous = history.scrollRestoration;
+    history.scrollRestoration = 'manual';
+    const restore = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => navigateRef.current(location.hash || '#hero', false));
+    };
+    window.addEventListener('popstate', restore);
+    window.addEventListener('hashchange', restore);
+    return () => {
+      cancelAnimationFrame(frame);
+      history.scrollRestoration = previous;
+      window.removeEventListener('popstate', restore);
+      window.removeEventListener('hashchange', restore);
+    };
+  }, []);
   useEffect(() => () => navigationCleanup.current?.(), []);
   const { scrollY } = useScrollPosition();
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -91,9 +109,16 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
 
     // Anchors may mark a chapter inside a persistent scroll scene rather than
     // a viewport-sized section. Intersection ratios cannot represent those.
-    const current = elements
-      .filter((element) => element.getBoundingClientRect().top <= NAV_OFFSET + 1)
-      .at(-1);
+    // A compact final chapter cannot reach the navbar once the document ends.
+    const last = elements.at(-1)!;
+    const atEnd =
+      Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight - 2;
+    const current =
+      atEnd && last.getBoundingClientRect().top < window.innerHeight
+        ? last
+        : elements
+            .filter((element) => element.getBoundingClientRect().top <= NAV_OFFSET + 1)
+            .at(-1);
     if (current) setActiveSection(current.id);
   }, [scrollY]);
 
@@ -121,7 +146,7 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
     };
   }, [isPaletteOpen]);
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (href: string, recordHistory = true) => {
     navigationCleanup.current?.();
     if (isOpen) menuButtonRef.current?.focus({ preventScroll: true });
     flushSync(() => setIsOpen(false));
@@ -141,7 +166,8 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
     const navOffset = targetId === 'hero' ? 0 : NAV_OFFSET;
     let targetTop = window.scrollY + target.getBoundingClientRect().top - navOffset;
 
-    window.history.replaceState(null, '', href);
+    if (recordHistory && window.location.hash !== href)
+      window.history.pushState(window.history.state, '', href);
     target.setAttribute('tabindex', '-1');
     target.focus({ preventScroll: true });
     const scroll = { y: window.scrollY };
@@ -176,6 +202,7 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
     events.forEach((event) => window.addEventListener(event, stop, { passive: true }));
     navigationCleanup.current = stop;
   };
+  navigateRef.current = handleNavClick;
 
   return (
     <>
@@ -212,7 +239,9 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
                       }}
                       aria-current={isActive ? 'page' : undefined}
                       className={`font-mono text-xs tracking-widest uppercase transition-colors hoverable ${
-                        isActive ? 'text-alert' : 'text-terminal-muted hover:text-alert'
+                        isActive || item.href === '#whos-there'
+                          ? 'text-alert'
+                          : 'text-terminal-muted hover:text-alert'
                       }`}
                     >
                       {item.label}
@@ -346,7 +375,11 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
                 }}
                 aria-current={isActive ? 'page' : undefined}
                 className={`font-mono text-2xl tracking-widest transition-all duration-300 ${
-                  isActive ? 'text-terminal' : 'text-terminal-muted'
+                  item.href === '#whos-there'
+                    ? 'text-alert'
+                    : isActive
+                      ? 'text-terminal'
+                      : 'text-terminal-muted'
                 } ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                 style={{ transitionDelay: `${index * 50}ms` }}
               >

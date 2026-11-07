@@ -1,15 +1,16 @@
 {
-  "name": "nostromo-portfolio",
+  "name": "caner-coskun-portfolio",
   "version": "2.0.0",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
   },
-  "description": "NOSTROMO - Professional Portfolio with React, GSAP & Tailwind CSS",
+  "description": "Caner Coşkun — personal portfolio",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "dev": "vite",
     "build": "tsc && vite build",
+    "check:dist": "node scripts/check-dist.mjs",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
@@ -25,6 +26,9 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwind-merge": "^2.6.1"
+  },
+  "overrides": {
+    "minimatch@>=7 <11.0.1": "11.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",

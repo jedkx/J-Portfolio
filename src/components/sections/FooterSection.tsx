@@ -27,7 +27,6 @@ export const FooterSection: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const [time, setTime] = useState(localTime);
-  const [ping, setPing] = useState(0);
   useEffect(() => {
     const timer = window.setInterval(() => setTime(localTime()), 15000);
     return () => window.clearInterval(timer);
@@ -119,37 +118,6 @@ export const FooterSection: React.FC = () => {
               <span>ANKARA, TR ↗</span>
             </div>
             <div className="contact-context contact-location">
-              <button
-                type="button"
-                className="contact-routing-control hoverable"
-                aria-label="Send a test signal"
-                onClick={() => setPing((value) => value + 1)}
-              >
-                <svg
-                  className="contact-routing"
-                  viewBox="0 0 400 90"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path d="M0 45H120L160 15H270M120 45H205L245 75H400M205 45H360" />
-                  <path className="contact-routing-pulse" d="M0 45H120L160 15H270" />
-                  <circle cx="120" cy="45" r="4" />
-                  <circle cx="205" cy="45" r="4" />
-                  <circle cx="270" cy="15" r="3" />
-                  <circle cx="360" cy="45" r="3" />
-                  <circle cx="400" cy="75" r="3" />
-                  {ping > 0 && (
-                    <g key={ping} className="contact-test-signal">
-                      <circle cx="120" cy="45" r="12" />
-                      <circle cx="270" cy="15" r="12" />
-                      <circle cx="360" cy="45" r="12" />
-                    </g>
-                  )}
-                </svg>
-                <span className="contact-test-label">
-                  {ping > 0 ? 'SIGNAL RETURNED ↗' : 'SEND A PING ↗'}
-                </span>
-              </button>
               <div className="contact-location-meta">
                 <span>LOCAL TIME / UTC+03</span>
                 <time>{time}</time>

@@ -27,6 +27,23 @@
   box-shadow: none;
 }
 /* Native modal dialogs are above the cursor portal: retain a usable pointer there. */
+.target-cursor__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+body.key-hover .target-cursor__ring {
+  animation: key-cursor-border 1.2s linear infinite;
+  border-width: 2px;
+  box-shadow:
+    0 0 12px currentColor,
+    inset 0 0 8px currentColor;
+}
 body:has(dialog[open]) .target-cursor {
   display: none;
 }
@@ -44,6 +61,7 @@ body.key-hover .target-cursor__dot {
 }
 @media (prefers-reduced-motion: reduce) {
   body.key-hover .target-cursor__corner,
+  body.key-hover .target-cursor__ring,
   body.key-hover .target-cursor__dot {
     animation: none;
   }

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import './TargetCursor.css';
 
 export interface TargetCursorProps {
+  idleRing?: boolean;
   targetSelector?: string;
   cursorColor?: string;
   cursorColorOnTarget?: string;
@@ -42,6 +43,7 @@ const resolveElement = (value: TargetCursorProps['container']): HTMLElement | nu
   (value && 'current' in value ? value.current : value) || null;
 
 const TargetCursor = ({
+  idleRing = false,
   targetSelector = '.cursor-target',
   cursorColor = '#ffffff',
   cursorColorOnTarget,
@@ -64,9 +66,11 @@ const TargetCursor = ({
   const rootRef = useRef<HTMLDivElement>(null);
   const cornerRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const dotRef = useRef<HTMLSpanElement>(null);
+  const ringRef = useRef<HTMLSpanElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const wakeRef = useRef<(() => void) | null>(null);
   const settings = {
+    idleRing,
     targetSelector,
     cursorColor,
     cursorColorOnTarget,
@@ -252,7 +256,16 @@ const TargetCursor = ({
         corner.style.height = `${s.cornerSize}px`;
         corner.style.borderWidth = `${s.thickness}px 0 0 ${s.thickness}px`;
         corner.style.borderTopLeftRadius = `${r.toFixed(2)}px`;
+        corner.style.opacity = s.idleRing ? Math.max(0, Math.min(1, lock.x)).toFixed(3) : '1';
       });
+
+      const ring = ringRef.current;
+      if (ring) {
+        ring.style.transform = `translate3d(${centerX.x}px, ${centerY.x}px, 0) translate(-50%, -50%) scale(${squeeze})`;
+        ring.style.width = `${s.size}px`;
+        ring.style.height = `${s.size}px`;
+        ring.style.opacity = s.idleRing ? Math.max(0, Math.min(1, 1 - lock.x)).toFixed(3) : '0';
+      }
 
       const dot = dotRef.current;
       if (dot) {
@@ -450,6 +463,7 @@ const TargetCursor = ({
         />
       ))}
       <span ref={dotRef} className="target-cursor__dot" />
+      <span ref={ringRef} className="target-cursor__ring" />
       <span ref={labelRef} className="target-cursor__label" />
     </div>,
     host

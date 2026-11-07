@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { usePrefersReducedMotion } from '@/hooks';
 import { particleCharge, particleColor } from '@/lib/particleColor';
+import { RenderBudget } from '@/lib/renderBudget';
 
 interface Star {
   x: number;
@@ -42,10 +43,23 @@ export const ParticleBackground: React.FC = () => {
       last = performance.now(),
       visible = true;
     let accentRgb = [255, 85, 85];
+    const budget = new RenderBudget();
+    budget.quality =
+      document.documentElement.dataset.renderQuality === 'low'
+        ? 0
+        : document.documentElement.dataset.renderQuality === 'balanced'
+          ? 1
+          : 2;
+    let previousFrame = 0;
     let temperatures: number[][] = [];
     const temperatureColor = (heat: number, energy = 1) =>
       particleColor(temperatures, heat, energy);
     const playing = () => !reduced && stage.dataset.playgroundActive !== 'false';
+    const endCursorCharge = () => {
+      delete document.body.dataset.heroCharging;
+      document.body.style.removeProperty('--cursor-charge');
+      document.body.style.removeProperty('--cursor-heat');
+    };
     const syncAccent = () => {
       const hex = getComputedStyle(document.documentElement)
         .getPropertyValue('--theme-accent')
@@ -86,7 +100,10 @@ export const ParticleBackground: React.FC = () => {
         oldHeight = height || innerHeight;
       width = stage.clientWidth || innerWidth;
       height = Math.min(stage.clientHeight || innerHeight, innerHeight);
-      const ratio = Math.min(devicePixelRatio || 1, 1.5);
+      const ratio = Math.min(
+        devicePixelRatio || 1,
+        budget.quality === 2 ? 1.5 : budget.quality === 1 ? 1.25 : 1
+      );
       canvas.width = Math.round(width * ratio);
       canvas.height = Math.round(height * ratio);
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -96,7 +113,12 @@ export const ParticleBackground: React.FC = () => {
       });
       const count = reduced
         ? 130
-        : Math.round(Math.min(width < 768 ? 340 : 1100, Math.max(270, (width * height) / 1500)));
+        : Math.round(
+            Math.min(
+              width < 768 ? [150, 240, 340][budget.quality] : [280, 600, 1100][budget.quality],
+              Math.max(150, (width * height) / 1500)
+            )
+          );
       while (stars.length < count) stars.push(makeStar());
       stars.length = count;
     };
@@ -104,6 +126,18 @@ export const ParticleBackground: React.FC = () => {
       if (!pointer.down) return;
       const charge = particleCharge(performance.now(), pointer.start),
         radius = 360 + charge * Math.max(width, height) * 0.75;
+      const bounds = canvas.getBoundingClientRect();
+      window.dispatchEvent(
+        new CustomEvent('hero-particle-burst', {
+          detail: {
+            x: bounds.left + pointer.x,
+            y: bounds.top + pointer.y,
+            charge,
+            color: `rgb(${temperatureColor(Math.min(1, charge * 0.85))})`,
+          },
+        })
+      );
+      endCursorCharge();
       stars.forEach((star) => {
         const dx = star.x - pointer.x,
           dy = star.y - pointer.y,
@@ -127,6 +161,16 @@ export const ParticleBackground: React.FC = () => {
       last = now;
       ctx.clearRect(0, 0, width, height);
       if (pointer.down) pointer.charge = particleCharge(now, pointer.start);
+      if (pointer.down) {
+        document.body.style.setProperty(
+          '--cursor-charge',
+          String(Math.min(1, pointer.charge / 1.5))
+        );
+        document.body.style.setProperty(
+          '--cursor-heat',
+          `rgb(${temperatureColor(Math.min(1, pointer.charge * 0.85))})`
+        );
+      }
       ctx.globalCompositeOperation = 'lighter';
       let connections = 0;
       for (const star of stars) {
@@ -198,7 +242,7 @@ export const ParticleBackground: React.FC = () => {
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size + (charged ? 0.35 : 0), 0, Math.PI * 2);
         ctx.fill();
-        if (star.size > 1.1 || star.heat > 0.35) {
+        if (budget.quality > 0 && (star.size > 1.1 || star.heat > 0.35)) {
           ctx.fillStyle = `rgba(${color},${brightness * 0.12})`;
           ctx.beginPath();
           ctx.arc(star.x, star.y, star.size * (2.4 + star.heat), 0, Math.PI * 2);
@@ -260,17 +304,25 @@ export const ParticleBackground: React.FC = () => {
     };
     const animate = (now: number) => {
       frame = 0;
+      const started = performance.now();
       draw(now, playing());
+      if (previousFrame && budget.sample(performance.now() - started, now - previousFrame)) {
+        document.documentElement.dataset.renderQuality = budget.quality === 0 ? 'low' : 'balanced';
+        resize();
+      }
+      previousFrame = now;
       if (visible && !document.hidden && playing()) frame = requestAnimationFrame(animate);
     };
     const updateAnimation = () => {
       cancelAnimationFrame(frame);
       frame = 0;
       if (!playing() || document.hidden || !visible) {
+        endCursorCharge();
         pointer.down = false;
         pointer.charge = 0;
       }
       last = performance.now();
+      previousFrame = 0;
       if (visible && !document.hidden) {
         draw(last, false);
         if (playing()) frame = requestAnimationFrame(animate);
@@ -298,6 +350,8 @@ export const ParticleBackground: React.FC = () => {
       pointer.down = true;
       pointer.start = performance.now();
       pointer.charge = 0;
+      document.body.dataset.heroCharging = 'true';
+      document.body.style.setProperty('--cursor-heat', `rgb(${accentRgb.join(',')})`);
     };
     const leave = () => {
       burst();
@@ -305,6 +359,7 @@ export const ParticleBackground: React.FC = () => {
       pointer.y = -10000;
     };
     const cancel = () => {
+      endCursorCharge();
       pointer.down = false;
       pointer.charge = 0;
       pointer.x = -10000;
@@ -341,6 +396,7 @@ export const ParticleBackground: React.FC = () => {
     window.addEventListener('resize', onResize);
     document.addEventListener('visibilitychange', updateAnimation);
     return () => {
+      endCursorCharge();
       cancelAnimationFrame(frame);
       observer.disconnect();
       stateObserver.disconnect();

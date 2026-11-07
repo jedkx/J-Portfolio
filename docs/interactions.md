@@ -7,7 +7,7 @@
 - Hero is a full-screen particle playground. About is the original neofetch terminal in normal document flow, with a brief entrance movement and no inner wheel trap.
 - Projects use a separate sticky gallery below the persistent navbar: desktop visual/description columns, mobile vertical composition. Scroll settles on a project; indices, previous/next and left/right keyboard arrows provide direct selection. Reduced motion and short viewports use normal-flow project cards.
 - The scrolling reference ribbon is between Projects and Contact, without hover pause or a pause button; reduced motion disables continuous animation.
-- Contact contains email, copy, CV, local time and an interactive ping diagram. Who’s there? is a separate chapter. Copyright/back-to-top is last.
+- Contact contains email, copy, CV, local time and social links. Who’s There is a separate chapter with Signal Run. Copyright/back-to-top is last.
 
 ## Discovery game
 
@@ -15,7 +15,7 @@
 
 - Five random keys are attached to words from readable content sections. Decorative transition text, linked controls and the puzzle UI cannot receive keys.
 - Discovery automatically fills the matching slot and plays a short sound; no random inline popup or manual paste step.
-- The receiver target changes between openings. Locking it unlocks sonar even with zero fragments. Sonar remains unlocked after detuning; decryption still requires a currently locked receiver and all five keys.
+- A pull-and-release puck game unlocks sonar after three receiver hits, even with zero fragments. Targets move after each hit; walls and a central bumper allow bank shots. The channel remains connected during further play; decryption also requires all five keys.
 - Sonar maps viewport-relative word positions into its marked screen square. It excludes off-screen, clipped, covered, inert, hidden, transparent and already-collected targets. Scans run four times per second while expanded and the document is visible. It is minimizable and disappears at 5/5; it is hidden while the resident is open.
 - Alternate access normalizes case, spaces and punctuation before comparing hashes. The return passphrase is displayed only after a successful reveal. This is a local game shortcut, not secure access control.
 - Key and passphrase routes have different first greetings; repeat openings cycle through return greetings. The result panel is rendered only after the split-page resident closes, so it is not baked into the opening shutters.
@@ -41,6 +41,35 @@
 A pointer event can be newer than the next RAF callback's timestamp. Charge must be clamped to zero before fractional powers; otherwise negative charge can produce NaN velocity/heat and an invalid palette index. `particleCharge` enforces finite bounds and `particleColor` handles invalid heat or an uninitialized palette. Tests reproduce this timing order.
 
 ## Verification boundaries
+
+### Playful signal controls — 2026-11-07
+
+The hero cursor now reads charge and heat from the actual particle simulation via
+inherited CSS variables. Release dispatches a single particle-burst event for its
+short cursor wave; blur, cancellation, hidden/paused physics and unmount clear
+the feedback. No React state updates are added to the particle frame loop.
+
+Contact contains contact links only, with no game. Who’s There hosts Signal Run,
+an endless paddle-and-obstacle game. Click/tap the board or press Enter to start;
+there is no separate Play button. Pointer/touch or held arrow keys move the
+paddle; Space pauses and tapping the paused board resumes. Difficulty grows continuously: faster ball,
+narrower paddle, moving and armored obstacles, wide/shield/slow bonuses.
+Reaching 100 points unlocks sonar without ending the run. Retry preserves the
+radar and best score. Physics use capped time and substeps; trails and sparks
+are bounded. The board pauses offscreen/hidden and is loaded only near view.
+
+The Who’s There heading uses deferred React Bits FuzzyText with subtle idle distortion and stronger hover/tap feedback,
+with a plain-text reduced-motion fallback. This chapter uses content height instead
+of forcing a full-screen minimum.
+The discovery introduction and How to play sit on the left. A compact game sits
+at the top right, with five key slots, Decrypt and the always-visible passphrase
+input directly underneath. Mobile follows the same reading order in one column.
+One status line replaces redundant receiver labels. If the optional canvas fails, a local recovery button
+opens the radar; email and the portfolio remain independent of the game.
+
+The hero ring changes diameter rather than using individual CSS scale, preserving
+its pointer coordinates while charging. Navbar Who's There is accent-colored;
+the decorative dots are removed.
 
 ### Performance follow-up — 2026-11-07
 

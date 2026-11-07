@@ -1,5 +1,5 @@
 // ============================================
-// APP COMPONENT - DARK MATTER
+// Portfolio application
 // ============================================
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -71,7 +71,10 @@ const App: React.FC = () => {
 
     const updateCursorState = () => {
       const shouldEnableCursor =
-        desktopQuery.matches && pointerQuery.matches && !prefersReducedMotion;
+        desktopQuery.matches &&
+        pointerQuery.matches &&
+        !prefersReducedMotion &&
+        document.documentElement.dataset.renderQuality !== 'low';
 
       setEnableCustomCursor(shouldEnableCursor);
 
@@ -83,6 +86,11 @@ const App: React.FC = () => {
     };
 
     updateCursorState();
+    const qualityObserver = new MutationObserver(updateCursorState);
+    qualityObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-render-quality'],
+    });
     desktopQuery.addEventListener('change', updateCursorState);
     pointerQuery.addEventListener('change', updateCursorState);
 
@@ -97,6 +105,7 @@ const App: React.FC = () => {
     });
 
     return () => {
+      qualityObserver.disconnect();
       desktopQuery.removeEventListener('change', updateCursorState);
       pointerQuery.removeEventListener('change', updateCursorState);
       document.body.classList.remove('cursor-hidden');
@@ -173,14 +182,14 @@ const App: React.FC = () => {
             {/* Main Sections */}
             <main id="main-content" tabIndex={-1}>
               <PortfolioExperience accentColor={accentColor} active={!isLoading} />
-            </main>
 
-            {/* Footer */}
-            <Marquee items={MANIFESTO_ITEMS} />
-            <FooterSection />
-            <div className="resident-chapter">
-              <SecretArchive />
-            </div>
+              {/* Footer */}
+              <Marquee items={MANIFESTO_ITEMS} />
+              <FooterSection />
+              <div className="resident-chapter">
+                <SecretArchive />
+              </div>
+            </main>
             <SiteBottom />
           </div>
         </div>

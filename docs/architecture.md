@@ -20,6 +20,9 @@ The site's personal terminal/space identity is deliberate. Architecture work mus
 | Optional discovery game and resident               | `src/components/game/`                                                          |
 | Visible-key sonar                                  | `src/components/game/FragmentSonar.tsx`, target measurement in `SecretGame.tsx` |
 | Particle charge bounds and safe color lookup       | `src/lib/particleColor.ts`                                                      |
+| Sustained rendering pressure and quality reduction | `src/lib/renderBudget.ts`, `styles/resilience.css`                               |
+| Endless signal game / pure physics                 | `components/sections/SignalPaddle.tsx`, `lib/signalRun.ts`                         |
+| Published asset, base-path and identity checks      | `scripts/check-dist.mjs`                                                        |
 
 ## Invariants
 
@@ -41,7 +44,7 @@ Active scoped owners include `terminal-original.css`, `navigation.css`, `referen
 
 ## Verification
 
-Use Node 22.12+ (`.nvmrc` pins the CI/Docker major), then:
+Use Node 24 (`.nvmrc` pins the CI/Docker major), then:
 
 ```sh
 npm ci
@@ -49,6 +52,7 @@ npm run lint
 npm run type-check
 npm test
 npm run build
+npm run check:dist
 npm audit --omit=dev
 ```
 

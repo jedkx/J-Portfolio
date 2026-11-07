@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // DARK MATTER Color Palette
+        // Portfolio color palette
         void: {
           DEFAULT: '#020202',
           light: '#080808',
