@@ -5,6 +5,8 @@ import { CONTACT_EMAIL, SOCIAL_LINKS } from '@/constants/data';
 import { usePrefersReducedMotion } from '@/hooks';
 import { SecretWords } from '@/components/game/SecretGame';
 import { CV_DRIVE_FILE_ID } from '@/constants/config';
+import Magnet from '@/components/react-bits/Magnet';
+import SpotlightCard from '@/components/react-bits/SpotlightCard';
 
 const localTime = () =>
   new Intl.DateTimeFormat('en-GB', {
@@ -154,7 +156,14 @@ export const FooterSection: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="contact-dock-panel">
+          <SpotlightCard
+            className="contact-dock-panel contact-spotlight"
+            spotlightColor="var(--theme-accent)"
+            intensity={0.12}
+            borderGlow={0.35}
+            flare={false}
+            proximity={30}
+          >
             <a className="contact-dock-mail hoverable" href={`mailto:${CONTACT_EMAIL}`}>
               <span className="contact-dock-mail-top">
                 <span>01 — DIRECT LINE</span>
@@ -170,33 +179,49 @@ export const FooterSection: React.FC = () => {
               </span>
               <span className="contact-dock-email">{CONTACT_EMAIL}</span>
             </a>
-            <button className="contact-dock-copy hoverable" onClick={copyEmail} type="button">
-              <span aria-live="polite">
-                {copyFailed
-                  ? 'Copy unavailable · use the email link'
-                  : copied
-                    ? 'Email address copied'
-                    : 'Copy email address'}
-              </span>
-              {copied ? (
-                <Check size={16} aria-hidden="true" />
-              ) : (
-                <Copy size={16} aria-hidden="true" />
-              )}
-            </button>
-            <a
-              className="contact-context contact-resume hoverable"
-              href={`https://drive.google.com/file/d/${CV_DRIVE_FILE_ID}/view`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Magnet
+              wrapperClassName="contact-magnet"
+              padding={20}
+              maxOffset={7}
+              magnetStrength={6}
+              disabled={reduced}
             >
-              <span>
-                <span className="contact-resume-label">A CLOSER LOOK</span>
-                <strong>View résumé</strong>
-              </span>
-              <ArrowUpRight size={22} aria-hidden="true" />
-            </a>
-          </div>
+              <button className="contact-dock-copy hoverable" onClick={copyEmail} type="button">
+                <span aria-live="polite">
+                  {copyFailed
+                    ? 'Copy unavailable · use the email link'
+                    : copied
+                      ? 'Email address copied'
+                      : 'Copy email address'}
+                </span>
+                {copied ? (
+                  <Check size={16} aria-hidden="true" />
+                ) : (
+                  <Copy size={16} aria-hidden="true" />
+                )}
+              </button>
+            </Magnet>
+            <Magnet
+              wrapperClassName="contact-magnet"
+              padding={20}
+              maxOffset={7}
+              magnetStrength={6}
+              disabled={reduced}
+            >
+              <a
+                className="contact-context contact-resume hoverable"
+                href={`https://drive.google.com/file/d/${CV_DRIVE_FILE_ID}/view`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>
+                  <span className="contact-resume-label">A CLOSER LOOK</span>
+                  <strong>View résumé</strong>
+                </span>
+                <ArrowUpRight size={22} aria-hidden="true" />
+              </a>
+            </Magnet>
+          </SpotlightCard>
         </div>
         <div className="contact-dock-links">
           <span className="contact-dock-links-label">

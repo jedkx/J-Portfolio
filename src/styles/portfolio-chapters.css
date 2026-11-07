@@ -179,7 +179,7 @@
     flex-direction: column;
     padding: 14px 5%;
     gap: 20px;
-    overflow-y: auto;
+    overflow-y: hidden;
   }
   .project-gallery .work-panel:not(.is-inspecting) .repository-visual {
     height: clamp(150px, 29svh, 260px);

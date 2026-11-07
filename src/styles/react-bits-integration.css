@@ -1,0 +1,50 @@
+/* Preserve layout; only the approved interaction layers change. */
+.reference-velocity {
+  overflow: hidden;
+}
+.reference-velocity-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.reference-velocity-copy {
+  display: flex;
+  flex: 0 0 auto;
+}
+.reference-velocity-copy > .reference-group {
+  flex-shrink: 0;
+}
+.contact-magnet {
+  width: 100%;
+}
+.contact-magnet > div > button,
+.contact-magnet > div > a {
+  width: 100%;
+}
+.contact-station .contact-spotlight {
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+/* Native modal dialogs are above the cursor portal: retain a usable pointer there. */
+body:has(dialog[open]) .target-cursor {
+  display: none;
+}
+body.cursor-hidden dialog[open],
+body.cursor-hidden dialog[open] * {
+  cursor: auto !important;
+}
+body.key-hover .target-cursor__corner {
+  animation: key-cursor-border 1.2s linear infinite;
+  filter: drop-shadow(0 0 5px currentColor);
+  border-width: 3px !important;
+}
+body.key-hover .target-cursor__dot {
+  animation: key-cursor-fill 1.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.key-hover .target-cursor__corner,
+  body.key-hover .target-cursor__dot {
+    animation: none;
+  }
+}

@@ -37,16 +37,7 @@
     <meta name="twitter:image" content="https://jedkx.github.io/J-Portfolio/og-image.svg" />
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Share+Tech+Mono&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Unicase:wght@600&family=Oswald:wght@500&display=swap"
-      rel="stylesheet"
-    />
+    <link href="/fonts/fonts.css" rel="stylesheet" />
 
     <title>Caner Coşkun | Portfolio</title>
 
@@ -75,10 +66,69 @@
       #root {
         min-height: 100vh;
       }
+      .initial-boot {
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .initial-boot > div {
+        width: min(660px, 80vw);
+      }
+      .initial-boot small {
+        font:
+          10px 'Share Tech Mono',
+          monospace;
+        letter-spacing: 0.15em;
+        color: #777;
+      }
+      .initial-boot strong {
+        display: block;
+        margin: 25px 0;
+        font:
+          700 clamp(40px, 10vw, 100px)/1 'Share Tech Mono',
+          monospace;
+        letter-spacing: -0.055em;
+      }
+      .initial-boot strong span {
+        display: block;
+        color: #ff5555;
+      }
+      .initial-boot a {
+        color: inherit;
+        font:
+          14px 'Share Tech Mono',
+          monospace;
+        padding: 12px 0;
+      }
+      .initial-recovery {
+        visibility: hidden;
+        animation: show-recovery 0s 8s forwards;
+      }
+      @keyframes show-recovery {
+        to {
+          visibility: visible;
+        }
+      }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="initial-boot">
+        <div>
+          <small>DARK MATTER / BOOT SEQUENCE</small><strong>HELLO <span>FRIEND</span></strong
+          ><a class="initial-recovery" href="mailto:ccoskun742@gmail.com">Email Caner</a>
+        </div>
+      </div>
+    </div>
+    <noscript
+      ><style>
+        .initial-recovery {
+          visibility: visible;
+          animation: none;
+        }
+      </style></noscript
+    >
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

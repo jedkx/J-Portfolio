@@ -42,4 +42,25 @@ A pointer event can be newer than the next RAF callback's timestamp. Charge must
 
 ## Verification boundaries
 
+### Performance follow-up — 2026-11-07
+
+Hero physics remain paused until the boot overlay completes. The reference ribbon
+loads its Motion-based implementation within 400px of the viewport; its RAF
+subscription stops offscreen, in hidden tabs and for reduced motion. GitHub code
+and requests are deferred until the terminal activity area approaches view.
+About height changes refresh gallery geometry; menu navigation follows late
+layout shifts until fresh user input, with a 20-second cleanup bound.
+
+The cursor settles on stationary targets and wakes on pointer, scroll, resize or
+target geometry changes. Narrow galleries that cannot fit a full project release
+into the existing static document layout instead of adding an inner scroller.
+Fonts retain their families/weights but are served from public/fonts with their
+OFL licenses. HTML includes a boot greeting and an email recovery link if the
+bundle fails. Refresh fonts explicitly with node scripts/sync-fonts.mjs.
+
+Main application chunk fell from 178.02 to about 136 KB gzip; deferred chunks
+still download when needed. This is a bundle measurement, not an FPS or Lighthouse
+score. Lighthouse execution was rejected by automatic approval review; no new
+lab score is claimed. Real-device profiling remains outstanding.
+
 Automated checks: TypeScript, ESLint, Node tests and production build. Recent browser checks covered desktop and a 390×844 viewport, normal About scroll, gallery buttons, and sonar-driven collection of all five keys. These are targeted checks, not comprehensive automated E2E coverage. Real-device Safari/Android, accessibility measurement, sustained thermal/performance profiling and deployment remain unverified. See the dated audit reports for earlier findings; their old scene thresholds and receiver values no longer describe the active UI.

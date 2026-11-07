@@ -12,6 +12,7 @@ import './styles/navigation.css';
 import './styles/refinement.css';
 import './styles/contact-station.css';
 import './styles/portfolio-chapters.css';
+import './styles/react-bits-integration.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

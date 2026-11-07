@@ -1,8 +1,40 @@
-import React from 'react';
-import { GitHubPanel } from './GitHubPanel';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { SecretWords } from '@/components/game/SecretGame';
 import { CONTACT_EMAIL, EDUCATION, EXPERIENCE, PERSONAL_INFO } from '@/constants/data';
 import '@/styles/terminal-original.css';
+const GitHubPanel = lazy(() =>
+  import('./GitHubPanel').then((module) => ({ default: module.GitHubPanel }))
+);
+
+function DeferredGitHub({ accentColor }: { accentColor: string }) {
+  const root = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!root.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setReady(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '160px' }
+    );
+    observer.observe(root.current);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div ref={root} className="terminal-original-github terminal-print" style={{ minHeight: 180 }}>
+      {ready ? (
+        <Suspense fallback={<span>Loading GitHub activity…</span>}>
+          <GitHubPanel accentColor={accentColor} />
+        </Suspense>
+      ) : (
+        <span aria-hidden="true">GitHub activity</span>
+      )}
+    </div>
+  );
+}
 
 const lines = [
   ['user', PERSONAL_INFO.name.toLowerCase()],
@@ -89,9 +121,7 @@ export const NeofetchTerminal: React.FC<{ accentColor: string }> = ({ accentColo
             <span className="terminal-caret" aria-hidden="true" />
           </div>
         </div>
-        <div className="terminal-original-github terminal-print">
-          <GitHubPanel accentColor={accentColor} />
-        </div>
+        <DeferredGitHub accentColor={accentColor} />
       </div>
     </div>
   );

@@ -25,7 +25,7 @@ export function usePortfolioScene({
       innerHeight - NAV_OFFSET) + NAV_OFFSET;
   const galleryStep = () => projectStep(viewportHeight());
   useLayoutEffect(() => {
-    if (reduced) return;
+    if (reduced || projectCount === 0) return;
     setTransitioning(false);
     setInspecting(false);
     const ctx = gsap.context(() => {
@@ -57,7 +57,10 @@ export function usePortfolioScene({
           scrub: 0.18,
           snap: {
             snapTo: (progress) =>
-              Math.round(progress * Math.max(1, panels.length)) / Math.max(1, panels.length),
+              document.body.dataset.chapterNavigating === 'true' ||
+              document.body.dataset.galleryNavigating === 'true'
+                ? progress
+                : Math.round(progress * Math.max(1, panels.length)) / Math.max(1, panels.length),
             duration: { min: 0.15, max: 0.3 },
             delay: 0.2,
             inertia: false,

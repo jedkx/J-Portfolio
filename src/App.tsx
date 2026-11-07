@@ -13,7 +13,6 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AtmosphereOverlays } from '@/components/layout/AtmosphereOverlays';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
 import { PortfolioExperience } from '@/components/sections/PortfolioExperience';
-import { initMagneticEffect } from '@/utils/magneticEffect';
 import { usePrefersReducedMotion } from '@/hooks';
 import { SecretGameProvider } from '@/components/game/SecretGame';
 import { SecretArchive } from '@/components/game/SecretArchive';
@@ -105,12 +104,6 @@ const App: React.FC = () => {
   }, [prefersReducedMotion]);
 
   useEffect(() => {
-    if (isLoading || prefersReducedMotion) return;
-    const disposeMagnetic = initMagneticEffect();
-    return disposeMagnetic;
-  }, [isLoading, prefersReducedMotion]);
-
-  useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--theme-accent', accentColor);
     root.style.setProperty('--theme-accent-rgb', hexToRgb(accentColor));
@@ -178,8 +171,8 @@ const App: React.FC = () => {
             <Navigation accentColor={accentColor} onAccentChange={setAccentColor} />
 
             {/* Main Sections */}
-            <main id="main-content">
-              <PortfolioExperience accentColor={accentColor} />
+            <main id="main-content" tabIndex={-1}>
+              <PortfolioExperience accentColor={accentColor} active={!isLoading} />
             </main>
 
             {/* Footer */}

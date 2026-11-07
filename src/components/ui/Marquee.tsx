@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion } from '@/hooks';
 import '@/styles/reference-ribbon.css';
+const ScrollVelocity = lazy(() => import('@/components/react-bits/ScrollVelocity'));
 
 interface ReferenceItem {
   text: string;
@@ -24,7 +25,22 @@ interface MarqueeProps {
 export const Marquee: React.FC<MarqueeProps> = ({ items, reverse = false, className }) => {
   const root = useRef<HTMLDivElement>(null);
   const [fontReady, setFontReady] = useState(false);
+  const [near, setNear] = useState(false);
   const reduced = usePrefersReducedMotion();
+  useEffect(() => {
+    if (!root.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNear(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(root.current);
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => {
     let live = true;
     document.fonts.ready.then(() => {
@@ -48,40 +64,53 @@ export const Marquee: React.FC<MarqueeProps> = ({ items, reverse = false, classN
       .querySelectorAll('[data-reference="hacker"]')
       .forEach((node) => observer.observe(node));
     return () => observer.disconnect();
-  }, [items, reduced]);
+  }, [items, reduced, near]);
 
+  const quotes = (
+    <div className="reference-group" key="quotes">
+      {items.map((raw, index) => {
+        const item: ReferenceItem = typeof raw === 'string' ? { text: raw } : raw;
+        const style: React.CSSProperties = {
+          color: item.color,
+          fontFamily: item.font,
+          fontWeight: item.fontWeight,
+          letterSpacing: item.letterSpacing,
+          fontSize: item.fontSize,
+          textShadow: item.textShadow,
+        };
+        return (
+          <span
+            className="reference-item"
+            data-reference={item.reference}
+            key={index}
+            style={style}
+          >
+            <span className="reference-quote">{item.text}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
   return (
     <div ref={root} className={cn('reference-ribbon', reverse && 'reference-reverse', className)}>
-      <div
-        className="reference-track"
-        style={{ animationPlayState: !fontReady ? 'paused' : 'running' }}
-      >
-        {[0, 1].map((copy) => (
-          <div className="reference-group" key={copy} aria-hidden={copy === 1 ? true : undefined}>
-            {items.map((raw, index) => {
-              const item: ReferenceItem = typeof raw === 'string' ? { text: raw } : raw;
-              const style: React.CSSProperties = {
-                color: item.color,
-                fontFamily: item.font,
-                fontWeight: item.fontWeight,
-                letterSpacing: item.letterSpacing,
-                fontSize: item.fontSize,
-                textShadow: item.textShadow,
-              };
-              return (
-                <span
-                  className="reference-item"
-                  data-reference={item.reference}
-                  key={index}
-                  style={style}
-                >
-                  <span className="reference-quote">{item.text}</span>
-                </span>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      {near && !reduced ? (
+        <Suspense fallback={quotes}>
+          <ScrollVelocity
+            velocity={!fontReady ? 0 : reverse ? 38 : -38}
+            texts={[quotes]}
+            numCopies={3}
+            parallaxClassName="reference-velocity"
+            scrollerClassName="reference-velocity-track"
+            className="reference-velocity-copy"
+            pauseOnHover={false}
+            draggable={false}
+            skewWithVelocity={1.5}
+            velocityMapping={{ input: [0, 1000], output: [0, 2] }}
+          />
+        </Suspense>
+      ) : (
+        quotes
+      )}
     </div>
   );
 };

@@ -9,6 +9,9 @@ import { NAV_ITEMS } from '@/constants/data';
 import { usePrefersReducedMotion, useScrollPosition } from '@/hooks';
 import { SecretHintButton } from '@/components/game/SecretGame';
 import { NAV_OFFSET } from '@/features/portfolio/scene';
+import Magnet from '@/components/react-bits/Magnet';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import gsap from 'gsap';
 
 interface NavigationProps {
   accentColor: string;
@@ -33,6 +36,8 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
   const palettePanelRef = useRef<HTMLDivElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const navigationCleanup = useRef<(() => void) | null>(null);
+  useEffect(() => () => navigationCleanup.current?.(), []);
   const { scrollY } = useScrollPosition();
   const prefersReducedMotion = usePrefersReducedMotion();
 
@@ -117,6 +122,7 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
   }, [isPaletteOpen]);
 
   const handleNavClick = (href: string) => {
+    navigationCleanup.current?.();
     if (isOpen) menuButtonRef.current?.focus({ preventScroll: true });
     flushSync(() => setIsOpen(false));
     setIsPaletteOpen(false);
@@ -126,15 +132,49 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
     if (!target) return;
 
     setActiveSection(targetId);
+    document.body.dataset.chapterNavigating = 'true';
+    ScrollTrigger.getAll().forEach((trigger) => {
+      const tween = trigger.getTween(true);
+      if (tween && typeof tween.kill === 'function') tween.kill();
+    });
 
     const navOffset = targetId === 'hero' ? 0 : NAV_OFFSET;
-    const targetTop = window.scrollY + target.getBoundingClientRect().top - navOffset;
+    let targetTop = window.scrollY + target.getBoundingClientRect().top - navOffset;
 
     window.history.replaceState(null, '', href);
-    window.scrollTo({
-      top: Math.max(0, targetTop),
-      behavior: prefersReducedMotion ? 'instant' : 'smooth',
+    target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+    const scroll = { y: window.scrollY };
+    const moveTo = (top: number) =>
+      gsap.to(scroll, {
+        y: Math.max(0, top),
+        duration: prefersReducedMotion ? 0 : 0.75,
+        ease: 'power2.inOut',
+        overwrite: true,
+        onUpdate: () => window.scrollTo({ top: scroll.y, behavior: 'instant' }),
+      });
+    let movement = moveTo(targetTop);
+    // Lazy GitHub content above a destination can change its position while
+    // navigation is in progress. Follow layout changes until user input resumes.
+    const observer = new ResizeObserver(() => {
+      const next = window.scrollY + target.getBoundingClientRect().top - navOffset;
+      if (Math.abs(next - targetTop) < 2) return;
+      targetTop = next;
+      movement = moveTo(next);
     });
+    observer.observe(document.body);
+    const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
+    const stop = () => {
+      delete document.body.dataset.chapterNavigating;
+      movement.kill();
+      observer.disconnect();
+      window.clearTimeout(timeout);
+      events.forEach((event) => window.removeEventListener(event, stop));
+      navigationCleanup.current = null;
+    };
+    const timeout = window.setTimeout(stop, 20000);
+    events.forEach((event) => window.addEventListener(event, stop, { passive: true }));
+    navigationCleanup.current = stop;
   };
 
   return (
@@ -146,16 +186,18 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
       >
         <div className="container mx-auto px-4 md:px-8">
           <nav className="flex items-center h-20" aria-label="Primary">
-            <a
-              href="#hero"
-              className="nav-wordmark font-display text-xl font-bold text-terminal hover:text-terminal-muted transition-colors hoverable magnetic flex-shrink-0"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavClick('#hero');
-              }}
-            >
-              JED<span className="text-terminal-muted">KX</span>
-            </a>
+            <Magnet padding={16} maxOffset={6} magnetStrength={6} disabled={prefersReducedMotion}>
+              <a
+                href="#hero"
+                className="nav-wordmark font-display text-xl font-bold text-terminal hover:text-terminal-muted transition-colors hoverable magnetic flex-shrink-0"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick('#hero');
+                }}
+              >
+                JED<span className="text-terminal-muted">KX</span>
+              </a>
+            </Magnet>
 
             <ul className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
               {NAV_ITEMS.map((item) => {
@@ -237,6 +279,7 @@ export const Navigation: React.FC<NavigationProps> = ({ accentColor, onAccentCha
                     </span>
                     <input
                       type="color"
+                      aria-label="Custom theme accent"
                       value={accentColor}
                       onChange={(e) => onAccentChange(e.target.value)}
                       className="h-7 w-10 cursor-pointer border-0 bg-transparent p-0"

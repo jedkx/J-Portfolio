@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Flip } from 'gsap/dist/Flip';
 import { flushSync } from 'react-dom';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Maximize2, Minimize2 } from 'lucide-react';
@@ -13,22 +14,83 @@ import { NeofetchTerminal } from './NeofetchTerminal';
 import { RepositoryVisual } from '@/features/portfolio/RepositoryVisual';
 import { usePortfolioScene } from '@/features/portfolio/usePortfolioScene';
 import '@/styles/experience.css';
+import Magnet from '@/components/react-bits/Magnet';
 
 gsap.registerPlugin(Flip);
 
-export const PortfolioExperience: React.FC<{ accentColor: string }> = ({ accentColor }) => {
+export const PortfolioExperience: React.FC<{ accentColor: string; active?: boolean }> = ({
+  accentColor,
+  active = true,
+}) => {
   const root = useRef<HTMLElement>(null);
   const about = useRef<HTMLElement>(null);
   const steering = useRef<ReturnType<typeof gsap.quickTo>[]>([]);
+  const projectMove = useRef<gsap.core.Tween | null>(null);
+  useEffect(() => {
+    const stop = () => {
+      projectMove.current?.kill();
+      delete document.body.dataset.galleryNavigating;
+    };
+    window.addEventListener('wheel', stop, { passive: true });
+    window.addEventListener('touchstart', stop, { passive: true });
+    return () => {
+      stop();
+      window.removeEventListener('wheel', stop);
+      window.removeEventListener('touchstart', stop);
+    };
+  }, []);
   const { projects, status, retry } = useProjects();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [compact, setCompact] = useState(() => window.matchMedia('(max-height: 600px)').matches);
-  const reduced = prefersReducedMotion || compact;
+  const [overflowFlow, setOverflowFlow] = useState(false);
+  const reduced = prefersReducedMotion || compact || overflowFlow;
   const [activeProject, setActiveProject] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [inspecting, setInspecting] = useState(false);
   const [played, setPlayed] = useState(false);
   const hasProjects = projects.length > 0;
+  useEffect(() => {
+    if (!about.current) return;
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => ScrollTrigger.refresh());
+    });
+    observer.observe(about.current);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  // Keep the existing gallery when it fits. On small screens that cannot fit
+  // a whole project, release it into document flow instead of nesting scrolls.
+  useLayoutEffect(() => {
+    if (prefersReducedMotion || compact || overflowFlow || !hasProjects) return;
+    const panels = [...(root.current?.querySelectorAll<HTMLElement>('.work-panel') ?? [])];
+    const check = () => {
+      if (window.innerWidth > 767 || inspecting) return;
+      if (
+        panels.some(
+          (panel) => panel.clientHeight > 0 && panel.scrollHeight > panel.clientHeight + 2
+        )
+      ) {
+        setOverflowFlow(true);
+      }
+    };
+    const observer = new ResizeObserver(check);
+    panels.forEach((panel) => {
+      observer.observe(panel);
+      const copy = panel.querySelector('.work-copy');
+      if (copy) observer.observe(copy);
+    });
+    check();
+    return () => observer.disconnect();
+  }, [prefersReducedMotion, compact, overflowFlow, hasProjects, projects, inspecting]);
+  useEffect(() => {
+    const reset = () => setOverflowFlow(false);
+    window.addEventListener('resize', reset);
+    return () => window.removeEventListener('resize', reset);
+  }, []);
   useLayoutEffect(() => {
     if (prefersReducedMotion) return;
     const ctx = gsap.context(() => {
@@ -84,12 +146,25 @@ export const PortfolioExperience: React.FC<{ accentColor: string }> = ({ accentC
 
   const goProject = (index: number) => {
     if (index < 0 || index >= projects.length) return;
+    // Lazy profile/chart content may have settled since the last scene refresh.
+    ScrollTrigger.refresh();
     const trigger = galleryTrigger.current;
-    if (trigger)
-      window.scrollTo({
-        top: trigger.start + index * galleryStep(),
-        behavior: prefersReducedMotion ? 'instant' : 'smooth',
+    if (trigger) {
+      projectMove.current?.kill();
+      document.body.dataset.galleryNavigating = 'true';
+      const snap = trigger.getTween(true);
+      if (snap && typeof snap.kill === 'function') snap.kill();
+      const scroll = { y: window.scrollY };
+      projectMove.current = gsap.to(scroll, {
+        y: trigger.start + index * galleryStep(),
+        duration: prefersReducedMotion ? 0 : 0.55,
+        ease: 'power2.inOut',
+        onUpdate: () => window.scrollTo({ top: scroll.y, behavior: 'instant' }),
+        onComplete: () => {
+          delete document.body.dataset.galleryNavigating;
+        },
       });
+    }
   };
 
   const toggleInspect = () => {
@@ -110,7 +185,7 @@ export const PortfolioExperience: React.FC<{ accentColor: string }> = ({ accentC
       <section id="hero" className="portfolio-landing">
         <div
           className="experience-stage"
-          data-playground-active="true"
+          data-playground-active={active ? 'true' : 'false'}
           onPointerDown={() => setPlayed(true)}
         >
           <ParticleBackground />
@@ -128,14 +203,16 @@ export const PortfolioExperience: React.FC<{ accentColor: string }> = ({ accentC
             </h1>
           </div>
           <div className="experience-intro">
-            <a
-              href={`https://drive.google.com/file/d/${CV_DRIVE_FILE_ID}/view`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hoverable"
-            >
-              VIEW CV <ArrowUpRight size={16} />
-            </a>
+            <Magnet padding={20} maxOffset={8} magnetStrength={6} disabled={prefersReducedMotion}>
+              <a
+                href={`https://drive.google.com/file/d/${CV_DRIVE_FILE_ID}/view`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hoverable"
+              >
+                VIEW CV <ArrowUpRight size={16} />
+              </a>
+            </Magnet>
           </div>
           <div className="hero-cue" aria-hidden="true">
             {!played && (
@@ -181,6 +258,12 @@ export const PortfolioExperience: React.FC<{ accentColor: string }> = ({ accentC
         style={{ '--project-steps': Math.max(1, projects.length) } as React.CSSProperties}
         aria-label="Projects"
         onKeyDown={(event) => {
+          if (
+            (event.target as HTMLElement).closest(
+              'input, textarea, select, [contenteditable="true"]'
+            )
+          )
+            return;
           if (reduced || inspecting || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
           event.preventDefault();
           goProject(activeProject + (event.key === 'ArrowRight' ? 1 : -1));
